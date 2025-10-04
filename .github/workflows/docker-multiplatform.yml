@@ -141,6 +141,16 @@ jobs:
       # Skip BuildKit setup - use native Docker daemon on Windows
       # BuildKit doesn't support Windows containers properly on GitHub runners
       
+      - name: Prepare Docker tags
+        id: prepare
+        shell: bash
+        run: |
+          # Convert repository name to lowercase and sanitize ref name for Docker tags
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          REF_SAFE=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/\//-/g')
+          echo "repo=${REPO_LOWER}" >> $GITHUB_OUTPUT
+          echo "tag=${REF_SAFE}" >> $GITHUB_OUTPUT
+      
       - name: Log in to Container Registry
         if: github.event_name != 'pull_request'
         run: |
@@ -148,12 +158,12 @@ jobs:
       
       - name: Build Windows client image
         run: |
-          docker build -f .devcontainer/client-windows.Dockerfile -t ${{ env.REGISTRY }}/${{ github.repository }}/client-windows:${{ github.ref_name }} .
+          docker build -f .devcontainer/client-windows.Dockerfile -t ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/client-windows:${{ steps.prepare.outputs.tag }} .
       
       - name: Push Windows client image
         if: github.event_name != 'pull_request'
         run: |
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}/client-windows:${{ github.ref_name }}
+          docker push ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/client-windows:${{ steps.prepare.outputs.tag }}
 
   build-server-windows:
     name: Build Server (Windows)
@@ -168,6 +178,16 @@ jobs:
       # Skip BuildKit setup - use native Docker daemon on Windows
       # BuildKit doesn't support Windows containers properly on GitHub runners
       
+      - name: Prepare Docker tags
+        id: prepare
+        shell: bash
+        run: |
+          # Convert repository name to lowercase and sanitize ref name for Docker tags
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          REF_SAFE=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/\//-/g')
+          echo "repo=${REPO_LOWER}" >> $GITHUB_OUTPUT
+          echo "tag=${REF_SAFE}" >> $GITHUB_OUTPUT
+      
       - name: Log in to Container Registry
         if: github.event_name != 'pull_request'
         run: |
@@ -175,9 +195,9 @@ jobs:
       
       - name: Build Windows server image
         run: |
-          docker build -f .devcontainer/server-windows.Dockerfile -t ${{ env.REGISTRY }}/${{ github.repository }}/server-windows:${{ github.ref_name }} .
+          docker build -f .devcontainer/server-windows.Dockerfile -t ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/server-windows:${{ steps.prepare.outputs.tag }} .
       
       - name: Push Windows server image
         if: github.event_name != 'pull_request'
         run: |
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}/server-windows:${{ github.ref_name }}
+          docker push ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/server-windows:${{ steps.prepare.outputs.tag }}
