@@ -1,0 +1,72 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+/build/output/
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Debug
+debug/
+*.dSYM/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+/data/
+
+# Logs
+*.log
+
+# Assets (large files)
+# Uncomment to ignore specific asset types
+# *.png
+# *.jpg
+# *.wav
+# *.ogg
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
+
+# OS specific
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Backup files
+*.bak
+*.backup
+
+# Test coverage
+tarpaulin-report.html
+cobertura.xml
+*.profraw
+*.profdata
+
+# Documentation build
+/docs/_build/
+/docs/.doctrees/
+
+# Cache
+.cache/
