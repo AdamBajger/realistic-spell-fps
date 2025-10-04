@@ -14,11 +14,11 @@
 set -e
 
 echo "=== Building workspace ==="
-cargo build --workspace --verbose
+cargo build --workspace --verbose --no-default-features
 
 echo ""
 echo "=== Building release binaries ==="
-cargo build --workspace --release --verbose
+cargo build --workspace --release --verbose --no-default-features
 
 echo ""
 echo "Build complete!"

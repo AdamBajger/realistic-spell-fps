@@ -1,7 +1,7 @@
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 /// Server-side networking and RPC module
 use tokio::net::{TcpListener, TcpStream};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tracing::{info, error};
+use tracing::{error, info};
 
 pub struct NetworkServer {
     addr: String,
@@ -38,10 +38,10 @@ impl NetworkServer {
 
 async fn handle_client(mut socket: TcpStream) -> anyhow::Result<()> {
     let mut buffer = [0; 1024];
-    
+
     loop {
         let n = socket.read(&mut buffer).await?;
-        
+
         if n == 0 {
             // Connection closed
             return Ok(());

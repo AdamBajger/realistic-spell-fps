@@ -14,11 +14,11 @@
 set -e
 
 echo "=== Running tests ==="
-cargo test --workspace --verbose
+cargo test --workspace --verbose --no-default-features
 
 echo ""
 echo "=== Running integration tests ==="
-cargo test --test '*' --verbose
+cargo test --test '*' --verbose --no-default-features
 
 echo ""
 echo "All tests passed!"

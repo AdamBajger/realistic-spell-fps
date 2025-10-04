@@ -1,6 +1,6 @@
+use tokio::task;
 /// End-to-end test for server-client communication
 use tokio::time::{sleep, Duration};
-use tokio::task;
 
 #[tokio::test]
 async fn test_server_client_hello_world() {
@@ -21,12 +21,20 @@ async fn test_server_client_hello_world() {
     // Send HELLO message
     let response = client.send_message("HELLO\n").await;
     assert!(response.is_ok(), "Client should send message");
-    assert_eq!(response.unwrap().trim(), "WORLD", "Server should respond with WORLD");
+    assert_eq!(
+        response.unwrap().trim(),
+        "WORLD",
+        "Server should respond with WORLD"
+    );
 
     // Send PING message
     let response = client.send_message("PING\n").await;
     assert!(response.is_ok(), "Client should send message");
-    assert_eq!(response.unwrap().trim(), "PONG", "Server should respond with PONG");
+    assert_eq!(
+        response.unwrap().trim(),
+        "PONG",
+        "Server should respond with PONG"
+    );
 
     // Clean up
     client.disconnect().await.unwrap();
@@ -64,4 +72,3 @@ async fn test_multiple_clients() {
     client2.disconnect().await.unwrap();
     server_task.abort();
 }
-

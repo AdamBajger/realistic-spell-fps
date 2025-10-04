@@ -7,17 +7,17 @@ use serde::{Deserialize, Serialize};
 pub struct PlayerInput {
     /// Sequence number for input ordering and reconciliation
     pub sequence: u32,
-    
+
     /// Raw movement input (binary controls)
     pub move_forward: bool,
     pub move_backward: bool,
     pub move_left: bool,
     pub move_right: bool,
-    
+
     /// Camera look delta (mouse movement since last frame)
     pub look_delta_x: f32,
     pub look_delta_y: f32,
-    
+
     /// Action buttons
     pub jump: bool,
     pub crouch: bool,
