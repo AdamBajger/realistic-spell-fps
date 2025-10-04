@@ -1,11 +1,13 @@
 use tracing::info;
 
-mod input;
-mod spell_ui;
+mod assets;
 mod gameplay;
+mod input;
+mod net;
 mod physics;
+mod renderer_vk;
 mod rendering;
-mod network;
+mod ui;
 
 #[cfg(feature = "audio")]
 mod audio;
@@ -23,13 +25,13 @@ fn main() -> anyhow::Result<()> {
     // - Physics prediction (with server reconciliation)
     // - Rendering (Vulkan/SPIR-V)
     // - Network client
-    
+
     #[cfg(feature = "audio")]
     {
         info!("Audio system enabled");
         // TODO: Initialize audio system
     }
-    
+
     #[cfg(feature = "lan-host")]
     {
         info!("LAN hosting capability enabled - can host local servers");
@@ -37,8 +39,8 @@ fn main() -> anyhow::Result<()> {
     }
 
     info!("Client subsystems initialized");
-    
+
     // TODO: Main game loop
-    
+
     Ok(())
 }

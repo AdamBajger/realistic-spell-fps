@@ -1,4 +1,4 @@
-# Realistic Spell FPS - Documentation
+# URMOM - Ultimate Realms: Masters of Magic - Documentation
 
 ## Project Overview
 

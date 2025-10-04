@@ -1,5 +1,5 @@
 {
-  "name": "Realistic Spell FPS Development",
+  "name": "URMOM (Ultimate Realms: Masters of Magic) Development",
   "image": "mcr.microsoft.com/devcontainers/rust:1-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
@@ -7,7 +7,8 @@
       "installOhMyZsh": true
     },
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   "customizations": {
     "vscode": {
@@ -16,11 +17,15 @@
         "vadimcn.vscode-lldb",
         "tamasfe.even-better-toml",
         "serayuzgur.crates",
-        "fill-labs.dependi"
+        "fill-labs.dependi",
+        "ms-azuretools.vscode-docker"
       ],
       "settings": {
         "rust-analyzer.checkOnSave.command": "clippy",
-        "rust-analyzer.cargo.features": "all"
+        "rust-analyzer.cargo.features": "all",
+        "rust-analyzer.cargo.allTargets": true,
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
       }
     }
   },
@@ -28,5 +33,16 @@
   "remoteUser": "vscode",
   "mounts": [
     "source=${localWorkspaceFolder}/.cargo,target=/home/vscode/.cargo,type=bind,consistency=cached"
-  ]
+  ],
+  "forwardPorts": [7777, 8080],
+  "portsAttributes": {
+    "7777": {
+      "label": "Game Server",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Client",
+      "onAutoForward": "notify"
+    }
+  }
 }

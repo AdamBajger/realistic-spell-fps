@@ -1,9 +1,9 @@
 use tracing::info;
 
-mod network;
-mod physics;
-mod state;
+mod game_logic;
+mod net;
 mod persistence;
+mod physics;
 
 fn main() -> anyhow::Result<()> {
     // Initialize logging
@@ -18,8 +18,8 @@ fn main() -> anyhow::Result<()> {
     // - Persistence layer
 
     info!("Server subsystems initialized");
-    
+
     // TODO: Start server loop
-    
+
     Ok(())
 }

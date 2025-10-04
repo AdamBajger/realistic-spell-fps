@@ -1,6 +1,7 @@
 use tracing::info;
 
-mod level;
+mod scene;
+mod tools;
 mod ui;
 
 fn main() -> anyhow::Result<()> {
@@ -16,8 +17,8 @@ fn main() -> anyhow::Result<()> {
     // - Viewport
 
     info!("Editor initialized");
-    
+
     // TODO: Start editor event loop
-    
+
     Ok(())
 }

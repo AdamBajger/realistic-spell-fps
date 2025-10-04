@@ -1,4 +1,4 @@
-# Contributing to Realistic Spell FPS
+# Contributing to URMOM (Ultimate Realms: Masters of Magic)
 
 Thank you for your interest in contributing!
 
