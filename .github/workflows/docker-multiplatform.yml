@@ -1,7 +1,10 @@
 # Multi-Platform Docker Build Workflow
 #
-# Builds platform-specific Docker images for Windows and Linux
+# Production-ready, platform-specific Docker builds
 # Runs on pushes to master/main and on version tags
+#
+# Use this for: Production deployments, multi-platform support
+# Use docker.yml for: Quick testing, single-platform development builds
 #
 # Platform-specific images:
 #   - client-linux: Linux AMD64 client

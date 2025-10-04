@@ -1,7 +1,10 @@
 # Docker Build Workflow
 #
-# Builds and publishes Docker images for client and server
+# Simple, single-platform Docker builds for quick iterations
 # Runs on pushes to master/main and on version tags
+#
+# Use this for: Quick testing, development builds
+# Use docker-multiplatform.yml for: Production multi-platform builds
 #
 # Images:
 #   - client: Built from .devcontainer/client.Dockerfile
