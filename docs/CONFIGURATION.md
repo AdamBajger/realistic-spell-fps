@@ -48,6 +48,39 @@ The CI/CD pipeline supports configuration via GitHub secrets for sensitive infor
 |-------------|-------------|---------------|
 | `SERVER_HOST` | Server host address | `127.0.0.1` |
 | `SERVER_PORT` | Server port number | `7777` |
+| `DOCKER_REGISTRY` | Docker registry URL | `ghcr.io` |
+| `DOCKER_USERNAME` | Registry username | GitHub actor |
+| `DOCKER_PASSWORD` | Registry password/token | `GITHUB_TOKEN` |
+
+### Docker Registry Configuration
+
+The multi-platform Docker workflow supports custom registries:
+
+**GitHub Container Registry (default)**:
+- No configuration needed
+- Uses `GITHUB_TOKEN` automatically
+- Free unlimited storage for public repos
+
+**Docker Hub**:
+```
+DOCKER_REGISTRY: docker.io
+DOCKER_USERNAME: your-dockerhub-username
+DOCKER_PASSWORD: your-dockerhub-access-token
+```
+
+**AWS ECR**:
+```
+DOCKER_REGISTRY: 123456789012.dkr.ecr.us-east-1.amazonaws.com
+DOCKER_USERNAME: AWS
+DOCKER_PASSWORD: your-ecr-token
+```
+
+**Private Registry**:
+```
+DOCKER_REGISTRY: registry.example.com
+DOCKER_USERNAME: your-username
+DOCKER_PASSWORD: your-password
+```
 
 ### How Secrets Are Used
 

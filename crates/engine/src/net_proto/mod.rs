@@ -1,10 +1,28 @@
 /// Network protocol schema module
 use serde::{Deserialize, Serialize};
+use glam::Vec3;
+
+/// Player input state sent from client to server
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlayerInput {
+    pub sequence: u32,
+    pub movement: Vec3,  // WASD movement vector
+    pub look_direction: Vec3,  // Camera/aim direction
+    pub actions: PlayerActions,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PlayerActions {
+    pub jump: bool,
+    pub crouch: bool,
+    pub cast_spell: bool,
+    pub use_item: bool,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClientMessage {
     Connect { player_name: String },
-    Input { sequence: u32, data: Vec<u8> },
+    Input(PlayerInput),
     Disconnect,
 }
 
