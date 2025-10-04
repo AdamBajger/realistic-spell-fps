@@ -1,4 +1,6 @@
 use tracing::info;
+use engine::config::Config;
+use std::path::Path;
 
 mod assets;
 mod gameplay;
@@ -12,19 +14,37 @@ mod ui;
 #[cfg(feature = "audio")]
 mod audio;
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     // Initialize logging
     tracing_subscriber::fmt::init();
 
-    info!("Starting Realistic Spell FPS Client");
+    info!("Starting URMOM Client");
 
-    // TODO: Initialize all subsystems
-    // - Input handling
-    // - Spell UI
-    // - Gameplay systems
-    // - Physics prediction (with server reconciliation)
-    // - Rendering (Vulkan/SPIR-V)
-    // - Network client
+    // Load configuration
+    let config = Config::load_or_default(Path::new("config.toml"));
+    info!("Client config: connecting to {}:{}", config.client.server_host, config.client.server_port);
+
+    // Initialize network client
+    let mut client = net::NetworkClient::new();
+    
+    // Try to connect to server
+    match client.connect(&config.client.server_host, config.client.server_port).await {
+        Ok(_) => {
+            info!("Successfully connected to server");
+            
+            // Send test message
+            if let Ok(response) = client.send_message("HELLO\n").await {
+                info!("Server responded: {}", response.trim());
+            }
+            
+            client.disconnect().await?;
+        }
+        Err(e) => {
+            info!("Could not connect to server: {}", e);
+            info!("Client can run in offline mode");
+        }
+    }
 
     #[cfg(feature = "audio")]
     {

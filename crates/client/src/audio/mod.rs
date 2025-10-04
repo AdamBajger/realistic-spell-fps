@@ -8,8 +8,8 @@ impl AudioSystem {
         Self
     }
 
-    pub fn play_sound(&self, _sound_name: &str) {
-        // TODO: Play sound
+    pub fn play_sound(&self, _sound_path: &str) {
+        // TODO: Play sound from path
     }
 }
 

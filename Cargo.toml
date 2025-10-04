@@ -34,3 +34,25 @@ tracing-subscriber = "0.3"
 # Error handling
 anyhow = "1.0"
 thiserror = "1.0"
+
+# Integration tests package
+[package]
+name = "urmom-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+client = { path = "crates/client", default-features = false }
+server = { path = "crates/server", default-features = false }
+engine = { path = "crates/engine" }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+
+[[test]]
+name = "e2e_server_client"
+path = "tests/integration/e2e_server_client.rs"
+
+[[test]]
+name = "deterministic_physics"
+path = "tests/integration/deterministic_physics.rs"

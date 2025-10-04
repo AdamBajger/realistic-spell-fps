@@ -1,4 +1,5 @@
 /// Core game engine library
+pub mod config;
 pub mod ecs;
 pub mod io;
 pub mod math;
