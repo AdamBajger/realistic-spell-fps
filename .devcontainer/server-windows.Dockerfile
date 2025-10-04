@@ -1,4 +1,6 @@
-# Windows Server Dockerfile
+# Windows Server Dockerfile  
+# Target platform: Windows Server 2022 (for dedicated game servers)
+# Note: Can also run on Windows 10/11 Desktop for testing
 # escape=`
 FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
 
@@ -25,7 +27,8 @@ COPY Cargo.lock* ./
 # If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
 RUN cargo build --release -p server --no-default-features
 
-# Runtime stage
+# Runtime stage - minimal Windows container
+# Suitable for Windows Server 2022 or Windows 10/11 Desktop
 FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
 
 WORKDIR /app

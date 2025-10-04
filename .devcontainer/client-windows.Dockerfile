@@ -1,4 +1,6 @@
 # Windows Client Dockerfile
+# Target platform: Windows 10/11 Desktop (uses Server Core for building compatibility)
+# Note: Windows containers use Server Core base images but run on Windows desktop hosts
 # escape=`
 FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
 
@@ -25,7 +27,8 @@ COPY Cargo.lock* ./
 # If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
 RUN cargo build --release -p client --no-default-features
 
-# Runtime stage
+# Runtime stage - minimal Windows container for desktop use (Windows 10/11)
+# Nano Server is the smallest Windows base image, suitable for running .NET Core and native apps
 FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
 
 WORKDIR /app
