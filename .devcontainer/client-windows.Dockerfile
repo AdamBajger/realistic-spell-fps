@@ -1,7 +1,7 @@
+# escape=`
 # Windows Client Dockerfile
 # Target platform: Windows 10/11 Desktop (uses Server Core for building compatibility)
 # Note: Windows containers use Server Core base images but run on Windows desktop hosts
-# escape=`
 FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
 
 # Install Rust

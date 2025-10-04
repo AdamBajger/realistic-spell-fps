@@ -1,7 +1,7 @@
+# escape=`
 # Windows Server Dockerfile  
 # Target platform: Windows Server 2022 (for dedicated game servers)
 # Note: Can also run on Windows 10/11 Desktop for testing
-# escape=`
 FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
 
 # Install Rust
