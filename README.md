@@ -1,4 +1,4 @@
-# Realistic Spell FPS
+# URMOM - Ultimate Realms: Masters of Magic
 
 A proof-of-concept indie FPS game with spell-based combat, built from scratch in Rust. Emphasis on gameplay with opportunities to polish graphics later.
 
@@ -49,17 +49,54 @@ cargo clippy --workspace
 ## Project Structure
 
 ```
-realistic-spell-fps/
+urmom/
 ├── crates/
 │   ├── client/      # Game client (rendering, input, UI, audio)
+│   │   └── src/
+│   │       ├── input/       # Input handling (WASD, mouse)
+│   │       ├── ui/          # Spellcasting UI and spell stack
+│   │       ├── gameplay/    # Gameplay logic
+│   │       ├── physics/     # Client physics & prediction
+│   │       ├── rendering/   # Rendering pipeline
+│   │       ├── renderer_vk/ # Vulkan-based renderer
+│   │       ├── assets/      # Asset management
+│   │       ├── audio/       # Audio system
+│   │       └── net/         # Client-side networking
 │   ├── server/      # Game server (physics, networking, state)
+│   │   └── src/
+│   │       ├── net/         # Networking & RPC
+│   │       ├── physics/     # Authoritative physics
+│   │       ├── game_logic/  # Game state & entity management
+│   │       └── persistence/ # Persistence & matchmaking
 │   ├── engine/      # Core engine (ECS, math, physics, network protocol)
+│   │   └── src/
+│   │       ├── ecs/         # ECS utilities
+│   │       ├── math/        # Math utilities
+│   │       ├── physics_core/# Deterministic physics core
+│   │       ├── net_proto/   # Network protocol schema
+│   │       └── io/          # IO abstractions
 │   └── editor/      # Level editor tools
+│       └── src/
+│           ├── ui/          # Editor UI
+│           ├── scene/       # Scene management
+│           └── tools/       # Editor tools
 ├── assets/          # Game assets (models, textures, sounds, shaders)
+│   ├── images/      # Textures and images
+│   ├── sounds/      # Audio files
+│   ├── models/      # 3D models
+│   ├── shaders/     # GLSL shaders (compiled to SPIR-V)
+│   └── materials/   # Material definitions
 ├── tests/           # Integration tests
+│   ├── integration/ # E2E tests
+│   └── harness/     # Test harness utilities
 ├── build/           # Build scripts and tools
+│   └── ci/          # CI scripts (shader compilation, lint, test)
+├── tools/           # Development utilities
 ├── docs/            # Documentation
 └── .devcontainer/   # VS Code dev container configuration
+    ├── Dockerfile.client     # Client container
+    ├── Dockerfile.server     # Server container
+    └── devcontainer.json     # Dev container config
 ```
 
 ## Documentation

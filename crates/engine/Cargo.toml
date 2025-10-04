@@ -21,6 +21,9 @@ tokio = { workspace = true }
 serde = { workspace = true }
 bincode = { workspace = true }
 
+# Configuration
+toml = "0.8"
+
 # Logging
 tracing = { workspace = true }
 

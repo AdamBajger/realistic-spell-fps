@@ -40,6 +40,9 @@ debug/
 # *.wav
 # *.ogg
 
+# Compiled shaders
+assets/shaders/compiled/
+
 # Temporary files
 /tmp/
 *.tmp
