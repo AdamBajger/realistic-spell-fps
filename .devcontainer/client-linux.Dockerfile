@@ -1,6 +1,6 @@
 # Linux Client Dockerfile
 # Uses shared Linux builder for efficient multi-binary builds
-FROM rust:1.75-slim-bullseye as builder
+FROM rust:1.90-slim-bullseye as builder
 
 WORKDIR /app
 

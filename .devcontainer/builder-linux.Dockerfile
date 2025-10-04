@@ -1,7 +1,7 @@
 # Linux Builder Dockerfile
 # This builds ALL binaries for Linux in one stage to maximize build cache efficiency
 # Other Dockerfiles can copy binaries from this image
-FROM rust:1.75-slim-bullseye as builder
+FROM rust:1.90-slim-bullseye as builder
 
 WORKDIR /app
 
