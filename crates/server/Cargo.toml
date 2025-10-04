@@ -1,0 +1,48 @@
+[package]
+name = "server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+# Engine
+engine = { path = "../engine" }
+
+# ECS
+bevy_ecs = { workspace = true }
+
+# Math
+glam = { workspace = true }
+
+# Physics (shared with engine)
+rapier3d = { workspace = true }
+
+# Networking
+tokio = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
+
+# Persistence
+sled = "0.34"
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+[lib]
+name = "server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "server"
+path = "src/main.rs"
+
+[features]
+default = []
+

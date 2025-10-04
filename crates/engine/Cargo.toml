@@ -1,0 +1,33 @@
+[package]
+name = "engine"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+# ECS
+bevy_ecs = { workspace = true }
+
+# Math
+glam = { workspace = true }
+
+# Physics
+rapier3d = { workspace = true }
+
+# Networking
+tokio = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+[lib]
+name = "engine"
+path = "src/lib.rs"
