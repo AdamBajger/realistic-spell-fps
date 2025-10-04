@@ -1,59 +1,60 @@
-/// Client-side physics simulation
-use rapier3d::prelude::*;
+/// Client-side physics with prediction and reconciliation
+/// The client runs physics prediction locally and reconciles with
+/// authoritative server state when updates arrive.
+use engine::physics::{PhysicsConfig, PhysicsWorld};
 use tracing::debug;
 
-pub struct PhysicsSystem {
-    gravity: Vector<Real>,
-    integration_parameters: IntegrationParameters,
-    physics_pipeline: PhysicsPipeline,
-    island_manager: IslandManager,
-    broad_phase: BroadPhase,
-    narrow_phase: NarrowPhase,
-    rigid_body_set: RigidBodySet,
-    collider_set: ColliderSet,
-    impulse_joint_set: ImpulseJointSet,
-    multibody_joint_set: MultibodyJointSet,
-    ccd_solver: CCDSolver,
+pub struct ClientPhysics {
+    /// Predicted physics state (runs ahead of server)
+    predicted_world: PhysicsWorld,
+    /// Last confirmed state from server (for reconciliation)
+    confirmed_world: PhysicsWorld,
 }
 
-impl PhysicsSystem {
+impl ClientPhysics {
     pub fn new() -> Self {
-        debug!("Initializing physics system");
+        debug!("Initializing client physics with prediction");
         Self {
-            gravity: vector![0.0, -9.81, 0.0],
-            integration_parameters: IntegrationParameters::default(),
-            physics_pipeline: PhysicsPipeline::new(),
-            island_manager: IslandManager::new(),
-            broad_phase: BroadPhase::new(),
-            narrow_phase: NarrowPhase::new(),
-            rigid_body_set: RigidBodySet::new(),
-            collider_set: ColliderSet::new(),
-            impulse_joint_set: ImpulseJointSet::new(),
-            multibody_joint_set: MultibodyJointSet::new(),
-            ccd_solver: CCDSolver::new(),
+            predicted_world: PhysicsWorld::new(PhysicsConfig::default()),
+            confirmed_world: PhysicsWorld::new(PhysicsConfig::default()),
         }
     }
 
-    pub fn step(&mut self) {
-        self.physics_pipeline.step(
-            &self.gravity,
-            &self.integration_parameters,
-            &mut self.island_manager,
-            &mut self.broad_phase,
-            &mut self.narrow_phase,
-            &mut self.rigid_body_set,
-            &mut self.collider_set,
-            &mut self.impulse_joint_set,
-            &mut self.multibody_joint_set,
-            &mut self.ccd_solver,
-            None,
-            &(),
-            &(),
-        );
+    /// Step the predicted physics forward
+    pub fn step_prediction(&mut self) {
+        self.predicted_world.step();
+    }
+
+    /// Update confirmed state from server and reconcile
+    pub fn reconcile_with_server(&mut self) {
+        // TODO: Implement state reconciliation
+        // Compare predicted_world with confirmed_world
+        // Apply corrections if divergence is significant
+        debug!("Reconciling client prediction with server state");
+    }
+
+    /// Access the predicted physics world
+    pub fn predicted(&self) -> &PhysicsWorld {
+        &self.predicted_world
+    }
+
+    /// Mutably access the predicted physics world
+    pub fn predicted_mut(&mut self) -> &mut PhysicsWorld {
+        &mut self.predicted_world
+    }
+
+    /// Access the confirmed physics world
+    pub fn confirmed(&self) -> &PhysicsWorld {
+        &self.confirmed_world
+    }
+
+    /// Mutably access the confirmed physics world
+    pub fn confirmed_mut(&mut self) -> &mut PhysicsWorld {
+        &mut self.confirmed_world
     }
 }
 
-impl Default for PhysicsSystem {
+impl Default for ClientPhysics {
     fn default() -> Self {
         Self::new()
     }

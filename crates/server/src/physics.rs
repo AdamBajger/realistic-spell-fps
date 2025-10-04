@@ -1,60 +1,45 @@
-/// Deterministic physics simulation for server authority
-use rapier3d::prelude::*;
+/// Server-side authoritative physics simulation
+/// The server runs the authoritative physics simulation and broadcasts
+/// the state to clients for reconciliation.
+use engine::physics::{PhysicsConfig, PhysicsWorld};
 use tracing::debug;
 
-pub struct DeterministicPhysics {
-    gravity: Vector<Real>,
-    integration_parameters: IntegrationParameters,
-    physics_pipeline: PhysicsPipeline,
-    island_manager: IslandManager,
-    broad_phase: BroadPhase,
-    narrow_phase: NarrowPhase,
-    rigid_body_set: RigidBodySet,
-    collider_set: ColliderSet,
-    impulse_joint_set: ImpulseJointSet,
-    multibody_joint_set: MultibodyJointSet,
-    ccd_solver: CCDSolver,
+pub struct AuthoritativePhysics {
+    physics_world: PhysicsWorld,
 }
 
-impl DeterministicPhysics {
+impl AuthoritativePhysics {
     pub fn new() -> Self {
-        debug!("Initializing deterministic physics");
+        debug!("Initializing authoritative physics (server)");
         Self {
-            gravity: vector![0.0, -9.81, 0.0],
-            integration_parameters: IntegrationParameters::default(),
-            physics_pipeline: PhysicsPipeline::new(),
-            island_manager: IslandManager::new(),
-            broad_phase: BroadPhase::new(),
-            narrow_phase: NarrowPhase::new(),
-            rigid_body_set: RigidBodySet::new(),
-            collider_set: ColliderSet::new(),
-            impulse_joint_set: ImpulseJointSet::new(),
-            multibody_joint_set: MultibodyJointSet::new(),
-            ccd_solver: CCDSolver::new(),
+            physics_world: PhysicsWorld::new(PhysicsConfig::default()),
         }
     }
 
-    pub fn step(&mut self, delta_time: f32) {
-        self.integration_parameters.dt = delta_time;
-        self.physics_pipeline.step(
-            &self.gravity,
-            &self.integration_parameters,
-            &mut self.island_manager,
-            &mut self.broad_phase,
-            &mut self.narrow_phase,
-            &mut self.rigid_body_set,
-            &mut self.collider_set,
-            &mut self.impulse_joint_set,
-            &mut self.multibody_joint_set,
-            &mut self.ccd_solver,
-            None,
-            &(),
-            &(),
-        );
+    pub fn with_config(config: PhysicsConfig) -> Self {
+        debug!("Initializing authoritative physics with custom config");
+        Self {
+            physics_world: PhysicsWorld::new(config),
+        }
+    }
+
+    /// Step the authoritative simulation
+    pub fn step(&mut self) {
+        self.physics_world.step();
+    }
+
+    /// Access the underlying physics world
+    pub fn world(&self) -> &PhysicsWorld {
+        &self.physics_world
+    }
+
+    /// Mutably access the underlying physics world
+    pub fn world_mut(&mut self) -> &mut PhysicsWorld {
+        &mut self.physics_world
     }
 }
 
-impl Default for DeterministicPhysics {
+impl Default for AuthoritativePhysics {
     fn default() -> Self {
         Self::new()
     }

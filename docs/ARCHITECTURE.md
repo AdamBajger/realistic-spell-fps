@@ -13,10 +13,11 @@ The game is built using a modular architecture with clear separation of concerns
 │  Rendering  │                           │  Authority  │
 │  Input      │                           │  Physics    │
 │  Audio      │                           │  State      │
-│  Prediction │                           │  Collision  │
+│  Prediction │                           │Persistence  │
 └─────────────┘                           └─────────────┘
        │                                         │
-       │                                         │
+       │              (can embed server          │
+       │               for LAN hosting)          │
        └─────────────┬───────────────────────────┘
                      │
               ┌──────▼──────┐
@@ -24,7 +25,7 @@ The game is built using a modular architecture with clear separation of concerns
               │             │
               │    ECS      │
               │    Math     │
-              │   Physics   │
+              │PhysicsWorld │
               │   Network   │
               └─────────────┘
 ```
@@ -41,10 +42,14 @@ We use bevy_ecs for entity management:
 
 ### Physics
 
-Rapier3D provides deterministic physics simulation:
+**See [PHYSICS_ARCHITECTURE.md](./PHYSICS_ARCHITECTURE.md) for detailed physics system design.**
 
-- Client: Prediction and interpolation
-- Server: Authoritative simulation
+Summary:
+- **Shared Core**: Engine provides `PhysicsWorld` used by both client and server
+- **Server Authority**: Server runs authoritative `AuthoritativePhysics` simulation
+- **Client Prediction**: Client runs `ClientPhysics` with prediction and reconciliation
+- **No Duplication**: Physics logic written once in engine, used everywhere
+- **Collision**: Built into Rapier3D physics simulation (no separate system needed)
 
 ### Networking
 
@@ -57,10 +62,14 @@ Rapier3D provides deterministic physics simulation:
 ```
 editor ──► engine
 client ──► engine
+        └► server (optional, for LAN hosting)
 server ──► engine
 ```
 
-All game logic crates depend on the engine crate, which provides shared functionality.
+- **engine**: Core shared functionality (ECS, math, physics, network protocol)
+- **server**: Authoritative game server (also exported as library)
+- **client**: Game client with rendering, input, and optional embedded server
+- **editor**: Level design and content creation tools
 
 ## Data Flow
 

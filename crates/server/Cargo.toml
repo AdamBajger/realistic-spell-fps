@@ -16,7 +16,7 @@ bevy_ecs = { workspace = true }
 # Math
 glam = { workspace = true }
 
-# Deterministic Physics
+# Physics (shared with engine)
 rapier3d = { workspace = true }
 
 # Networking
@@ -35,5 +35,14 @@ tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 
+[lib]
+name = "server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "server"
+path = "src/main.rs"
+
 [features]
 default = []
+

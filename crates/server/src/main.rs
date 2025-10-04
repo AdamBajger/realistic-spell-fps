@@ -3,7 +3,6 @@ use tracing::info;
 mod network;
 mod physics;
 mod state;
-mod collision;
 mod persistence;
 
 fn main() -> anyhow::Result<()> {
@@ -14,9 +13,8 @@ fn main() -> anyhow::Result<()> {
 
     // TODO: Initialize all subsystems
     // - Network server
-    // - Deterministic physics
+    // - Authoritative physics (includes collision detection)
     // - Game state management
-    // - Collision detection
     // - Persistence layer
 
     info!("Server subsystems initialized");

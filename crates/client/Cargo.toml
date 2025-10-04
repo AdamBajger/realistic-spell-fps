@@ -10,13 +10,16 @@ repository.workspace = true
 # Engine
 engine = { path = "../engine" }
 
+# Server (optional, for LAN hosting)
+server = { path = "../server", optional = true }
+
 # ECS
 bevy_ecs = { workspace = true }
 
 # Math
 glam = { workspace = true }
 
-# Physics
+# Physics (shared with engine)
 rapier3d = { workspace = true }
 
 # Networking
@@ -29,8 +32,8 @@ ash = "0.37"
 gpu-allocator = "0.25"
 winit = "0.29"
 
-# Audio
-rodio = "0.17"
+# Audio (optional)
+rodio = { version = "0.17", optional = true }
 
 # Logging
 tracing = { workspace = true }
@@ -41,5 +44,11 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 
 [features]
-default = []
+default = ["lan-host", "audio"]
+# Enable LAN hosting capability (embeds server)
+lan-host = ["server"]
+# Enable audio support
+audio = ["rodio"]
 vulkan = []
+
+
