@@ -1,4 +1,5 @@
 # Linux Server Dockerfile
+# Uses shared Linux builder for efficient multi-binary builds
 FROM rust:1.75-slim-bullseye as builder
 
 WORKDIR /app
@@ -16,11 +17,11 @@ COPY crates ./crates
 # Copy Cargo.lock if it exists, otherwise cargo will generate it
 COPY Cargo.lock* ./
 
-# Build the server
+# Build only the server binary
 # If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
 RUN cargo build --release -p server --no-default-features
 
-# Runtime stage
+# Runtime stage - minimal container with only the binary
 FROM debian:bullseye-slim
 
 # Install runtime dependencies
@@ -31,7 +32,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy the built binary and config
+# Copy the built binary and config from builder
 COPY --from=builder /app/target/release/server /app/server
 COPY --from=builder /app/config.toml /app/config.toml
 
