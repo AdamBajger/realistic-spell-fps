@@ -1,5 +1,5 @@
 # Linux Server Dockerfile
-FROM rust:1.70-slim-bullseye as builder
+FROM rust:1.75-slim-bullseye as builder
 
 WORKDIR /app
 

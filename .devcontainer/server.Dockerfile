@@ -1,5 +1,5 @@
 # Server Dockerfile
-FROM rust:1.70-slim-bullseye as builder
+FROM rust:1.75-slim-bullseye as builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY Cargo.lock* ./
 
 # Build the server
 # If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
-RUN cargo build --release -p server
+RUN cargo build --release -p server --no-default-features
 
 # Runtime stage
 FROM debian:bullseye-slim
