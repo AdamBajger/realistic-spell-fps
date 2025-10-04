@@ -10,10 +10,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace files
-COPY Cargo.toml Cargo.lock config.toml ./
+COPY Cargo.toml config.toml ./
 COPY crates ./crates
 
+# Copy Cargo.lock if it exists, otherwise cargo will generate it
+COPY Cargo.lock* ./
+
 # Build the client (without default features to avoid audio dependencies in container)
+# If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
 RUN cargo build --release -p client --no-default-features
 
 # Runtime stage

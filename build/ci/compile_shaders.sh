@@ -1,6 +1,17 @@
 #!/bin/bash
 # Shader compilation script
-# Compiles GLSL shaders to SPIR-V using glslc
+#
+# Purpose: Compiles GLSL shaders to SPIR-V bytecode for Vulkan rendering
+# Usage: ./compile_shaders.sh
+#
+# Requirements: glslc (from Vulkan SDK) must be installed
+# Input: assets/shaders/{vertex,fragment,compute}/*.{vert,frag,comp}
+# Output: assets/shaders/compiled/*.spv (git-ignored)
+#
+# Shader types compiled:
+#   - Vertex shaders (.vert)
+#   - Fragment shaders (.frag)
+#   - Compute shaders (.comp)
 
 set -e
 

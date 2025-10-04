@@ -1,3 +1,21 @@
+# Multi-Platform Docker Build Workflow
+#
+# Builds platform-specific Docker images for Windows and Linux
+# Runs on pushes to master/main and on version tags
+#
+# Platform-specific images:
+#   - client-linux: Linux AMD64 client
+#   - server-linux: Linux AMD64 server
+#   - client-windows: Windows AMD64 client
+#   - server-windows: Windows AMD64 server
+#
+# Published to: Configurable registry (default: GitHub Container Registry)
+# Configuration: Uses DOCKER_REGISTRY, DOCKER_USERNAME, DOCKER_PASSWORD secrets
+#
+# Cargo.lock handling:
+#   - Dockerfiles use COPY Cargo.lock* pattern to handle missing lock file
+#   - If missing, cargo will generate it during docker build
+#
 name: Multi-Platform Docker Build
 
 on:

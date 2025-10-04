@@ -14,10 +14,15 @@ RUN $env:Path += ';C:\Users\ContainerAdministrator\.cargo\bin'
 WORKDIR /app
 
 # Copy workspace files
-COPY Cargo.toml Cargo.lock config.toml ./
+COPY Cargo.toml config.toml ./
 COPY crates ./crates
 
+# Copy Cargo.lock if it exists, otherwise cargo will generate it
+# PowerShell doesn't support glob patterns in COPY, so we handle this differently
+COPY Cargo.lock* ./
+
 # Build the server
+# If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
 RUN cargo build --release -p server --no-default-features
 
 # Runtime stage

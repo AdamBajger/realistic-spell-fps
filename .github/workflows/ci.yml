@@ -1,3 +1,17 @@
+# CI/CD Workflow for URMOM (Ultimate Realms: Masters of Magic)
+#
+# This workflow runs on every push and pull request to master/main branches.
+#
+# Jobs:
+#   - test: Runs all workspace tests with no default features
+#   - lint: Checks code formatting (rustfmt) and runs clippy for code quality
+#   - build-linux/windows/macos: Cross-platform compilation tests
+#
+# Cargo.lock handling:
+#   - If Cargo.lock exists, it will be used for reproducible builds
+#   - If missing, cargo will generate it and lock to latest compatible versions
+#   - Caching uses both Cargo.toml and Cargo.lock for better cache hit rates
+#
 name: CI
 
 on:
@@ -24,23 +38,35 @@ jobs:
         with:
           components: clippy, rustfmt
       
+      # Cargo dependency caching
+      # If Cargo.lock doesn't exist, cargo will generate it during build
+      # Cache keys use a fallback pattern to enable sharing across similar builds
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}-
+            ${{ runner.os }}-cargo-registry-
       
       - name: Cache cargo index
         uses: actions/cache@v4
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.toml') }}-
+            ${{ runner.os }}-cargo-git-
       
       - name: Cache target directory
         uses: actions/cache@v4
         with:
           path: target
-          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-target-${{ hashFiles('**/Cargo.toml') }}-
+            ${{ runner.os }}-target-
       
       - name: Generate config from environment
         run: |
