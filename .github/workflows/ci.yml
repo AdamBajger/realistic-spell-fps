@@ -39,34 +39,25 @@ jobs:
           components: clippy, rustfmt
       
       # Cargo dependency caching
-      # If Cargo.lock doesn't exist, cargo will generate it during build
-      # Cache keys use a fallback pattern to enable sharing across similar builds
+      # Note: Cargo.lock is gitignored, so cargo will generate it during first build
+      # hashFiles returns empty string if file doesn't exist, which is fine for caching
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}-
-            ${{ runner.os }}-cargo-registry-
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
       
       - name: Cache cargo index
         uses: actions/cache@v4
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.toml') }}-
-            ${{ runner.os }}-cargo-git-
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
       
       - name: Cache target directory
         uses: actions/cache@v4
         with:
           path: target
-          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-target-${{ hashFiles('**/Cargo.toml') }}-
-            ${{ runner.os }}-target-
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
       
       - name: Generate config from environment
         run: |

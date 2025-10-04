@@ -2,7 +2,7 @@
 /target/
 **/*.rs.bk
 *.pdb
-# Cargo.lock is tracked for workspace projects to ensure reproducible builds
+Cargo.lock
 
 # Editor
 .vscode/
