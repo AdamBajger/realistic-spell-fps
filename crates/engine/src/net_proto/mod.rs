@@ -1,18 +1,24 @@
 /// Network protocol schema module
 use serde::{Deserialize, Serialize};
-use glam::Vec3;
 
 /// Player input state sent from client to server
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PlayerInput {
-    pub sequence: u32,
-    pub movement: Vec3,  // WASD movement vector
-    pub look_direction: Vec3,  // Camera/aim direction
-    pub actions: PlayerActions,
-}
-
+/// Contains only raw controller/keyboard state - server calculates actual movement
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct PlayerActions {
+pub struct PlayerInput {
+    /// Sequence number for input ordering and reconciliation
+    pub sequence: u32,
+    
+    /// Raw movement input (binary controls)
+    pub move_forward: bool,
+    pub move_backward: bool,
+    pub move_left: bool,
+    pub move_right: bool,
+    
+    /// Camera look delta (mouse movement since last frame)
+    pub look_delta_x: f32,
+    pub look_delta_y: f32,
+    
+    /// Action buttons
     pub jump: bool,
     pub crouch: bool,
     pub cast_spell: bool,

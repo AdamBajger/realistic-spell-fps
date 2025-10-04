@@ -4,8 +4,8 @@ use std::path::Path;
 
 mod game_logic;
 mod net;
-mod persistence;
 mod physics;
+mod player_data;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

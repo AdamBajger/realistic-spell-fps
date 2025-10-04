@@ -17,17 +17,25 @@ impl AuthoritativePhysics {
         self.world.step(delta_time);
     }
 
-    /// Validates and processes player input
+    /// Process player input and calculate movement
+    /// Server authoritative - client only sends control inputs
     pub fn process_input(&mut self, input: &PlayerInput) -> bool {
-        // TODO: Apply validated input to physics simulation
-        // Validate movement vector magnitude, check for cheating, etc.
-        let movement_magnitude = input.movement.length();
-        if movement_magnitude > 10.0 {
-            // Reject input that's too fast (potential cheat)
-            return false;
-        }
+        // TODO: Calculate movement vector from binary inputs
+        // Server controls physics constants (acceleration, max speed, etc.)
         
-        // TODO: Apply input to player entity in physics world
+        // Example: Convert binary inputs to movement direction
+        let mut _move_x = 0.0;
+        let mut _move_z = 0.0;
+        
+        if input.move_forward { _move_z += 1.0; }
+        if input.move_backward { _move_z -= 1.0; }
+        if input.move_right { _move_x += 1.0; }
+        if input.move_left { _move_x -= 1.0; }
+        
+        // TODO: Apply movement to player entity in physics world
+        // TODO: Process look delta for camera rotation
+        // TODO: Handle jump, crouch, spell casting
+        
         true
     }
 }
