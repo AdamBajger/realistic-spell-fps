@@ -16,16 +16,14 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
         '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.22000'; `
     Remove-Item vs_buildtools.exe
 
-# Install Rust using rustup.rs script
+# Install Rust using rustup-init.exe (Windows installer)
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
-    iex ((New-Object System.Net.WebClient).DownloadString('https://sh.rustup.rs')); `
-    Start-Process -Wait -FilePath "$env:USERPROFILE\.cargo\bin\rustup.exe" -ArgumentList 'default', 'stable'
-
-# Update PATH to include Rust binaries
-RUN $oldPath = [Environment]::GetEnvironmentVariable('PATH', 'Machine'); `
-    $newPath = "$env:USERPROFILE\.cargo\bin;$oldPath"; `
-    [Environment]::SetEnvironmentVariable('PATH', $newPath, 'Machine')
+    Invoke-WebRequest -Uri 'https://win.rustup.rs/x86_64' -OutFile 'rustup-init.exe'; `
+    .\rustup-init.exe -y --default-toolchain stable --profile minimal; `
+    Remove-Item rustup-init.exe; `
+    $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"; `
+    [Environment]::SetEnvironmentVariable('PATH', "$env:USERPROFILE\.cargo\bin;$([Environment]::GetEnvironmentVariable('PATH', 'Machine'))", 'Machine')
 
 WORKDIR C:\app
 
