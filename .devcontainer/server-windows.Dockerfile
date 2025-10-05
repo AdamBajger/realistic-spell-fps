@@ -4,9 +4,11 @@
 # Note: Can also run on Windows 10/11 Desktop for testing
 FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
 
+SHELL ["powershell", "-Command"]
+
 # Install Visual Studio Build Tools (required for MSVC linker)
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-RUN Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile 'vs_buildtools.exe'; `
+RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
+    Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile 'vs_buildtools.exe'; `
     Start-Process -Wait -FilePath '.\vs_buildtools.exe' -ArgumentList '--quiet', '--wait', '--norestart', '--nocache', `
         '--installPath', 'C:\BuildTools', `
         '--add', 'Microsoft.VisualStudio.Workload.VCTools', `
@@ -14,15 +16,18 @@ RUN Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -Out
         '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.22000'; `
     Remove-Item vs_buildtools.exe
 
-# Install Rust
-RUN Invoke-WebRequest -Uri 'https://win.rustup.rs' -OutFile 'rustup-init.exe'; `
-    .\rustup-init.exe -y --default-toolchain stable-x86_64-pc-windows-msvc; `
-    Remove-Item rustup-init.exe
+# Install Rust using rustup.rs script
+RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+    iex ((New-Object System.Net.WebClient).DownloadString('https://sh.rustup.rs')); `
+    Start-Process -Wait -FilePath "$env:USERPROFILE\.cargo\bin\rustup.exe" -ArgumentList 'default', 'stable'
 
-# Add Rust and MSVC to PATH
-ENV PATH="C:\Users\ContainerAdministrator\.cargo\bin;C:\BuildTools\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64;C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;${PATH}"
+# Update PATH to include Rust binaries
+RUN $oldPath = [Environment]::GetEnvironmentVariable('PATH', 'Machine'); `
+    $newPath = "$env:USERPROFILE\.cargo\bin;$oldPath"; `
+    [Environment]::SetEnvironmentVariable('PATH', $newPath, 'Machine')
 
-WORKDIR /app
+WORKDIR C:\app
 
 # Copy workspace files
 COPY Cargo.toml config.toml ./
@@ -37,11 +42,11 @@ RUN cargo build --release -p server --no-default-features
 # Suitable for Windows Server 2022 or Windows 10/11 Desktop
 FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
 
-WORKDIR /app
+WORKDIR C:\app
 
 # Copy the built binary and config
-COPY --from=builder /app/target/release/server.exe /app/server.exe
-COPY --from=builder /app/config.toml /app/config.toml
+COPY --from=builder C:\app\target\release\server.exe C:\app\server.exe
+COPY --from=builder C:\app\config.toml C:\app\config.toml
 
 # Create data directory
 RUN mkdir data
