@@ -1,52 +1,83 @@
 # escape=`
-# Windows Server Dockerfile  
-# Target platform: Windows Server 2022 (for dedicated game servers)
-# Note: Can also run on Windows 10/11 Desktop for testing
-FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
+# ===========================================
+# Realistic Spell FPS - Dedicated Server Build
+# ===========================================
+# Target: Windows Server 2022 (also compatible with Windows 10/11 Desktop)
+# Base:   Windows Server Core (for build compatibility)
+# Focus:  Readability and stability over minimal layers
+# ===========================================
 
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS builder
+
+# Use PowerShell as the default shell
 SHELL ["powershell", "-Command"]
 
-# Install Visual Studio Build Tools (required for MSVC linker)
+# ------------------------------
+# Step 1: Install Visual Studio Build Tools (MSVC)
+# ------------------------------
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
+    Write-Host 'Installing Visual Studio Build Tools...'; `
     Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile 'vs_buildtools.exe'; `
-    Start-Process -Wait -FilePath '.\vs_buildtools.exe' -ArgumentList '--quiet', '--wait', '--norestart', '--nocache', `
+    Start-Process -Wait -FilePath '.\vs_buildtools.exe' -ArgumentList `
+        '--quiet', '--wait', '--norestart', '--nocache', `
         '--installPath', 'C:\BuildTools', `
         '--add', 'Microsoft.VisualStudio.Workload.VCTools', `
         '--add', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', `
         '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.22000'; `
-    Remove-Item vs_buildtools.exe
+    Remove-Item 'vs_buildtools.exe'; `
+    Write-Host 'Visual Studio Build Tools installation completed.'
 
-# Install Rust using rustup-init.exe (Windows installer)
+# ------------------------------
+# Step 2: Install Rust Toolchain via rustup
+# ------------------------------
+ARG RUST_VERSION=stable
+
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+    Write-Host 'Installing Rust toolchain...'; `
+    [System.Net.ServicePointManager]::SecurityProtocol = `
+        [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
     Invoke-WebRequest -Uri 'https://win.rustup.rs/x86_64' -OutFile 'rustup-init.exe'; `
-    .\rustup-init.exe -y --default-toolchain stable --profile minimal; `
-    Remove-Item rustup-init.exe; `
-    $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"; `
-    [Environment]::SetEnvironmentVariable('PATH', "$env:USERPROFILE\.cargo\bin;$([Environment]::GetEnvironmentVariable('PATH', 'Machine'))", 'Machine')
+    Start-Process -Wait -FilePath '.\rustup-init.exe' -ArgumentList `
+        '-y', '--default-toolchain', '${env:RUST_VERSION}', '--profile', 'minimal'; `
+    Remove-Item 'rustup-init.exe'; `
+    $cargoBin = Join-Path $env:USERPROFILE ".cargo\bin"; `
+    $env:PATH = "$cargoBin;$env:PATH"; `
+    [Environment]::SetEnvironmentVariable('PATH', "$cargoBin;$([Environment]::GetEnvironmentVariable('PATH', 'Machine'))", 'Machine'); `
+    Write-Host 'Rust toolchain installed successfully.'
 
+# ------------------------------
+# Step 3: Verify Rust Installation
+# ------------------------------
+RUN rustc --version; cargo --version
+
+# ------------------------------
+# Step 4: Prepare Workspace
+# ------------------------------
 WORKDIR C:\app
 
-# Copy workspace files
 COPY Cargo.toml config.toml ./
 COPY Cargo.lock ./
 COPY crates ./crates
 
-# Build the server (with Cargo.lock for reproducible builds)
-# If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
-RUN cargo build --release -p server --no-default-features
+# ------------------------------
+# Step 5: Build Server Binary
+# ------------------------------
+RUN Write-Host 'Starting cargo build for server...'; `
+    cargo build --release -p server --no-default-features; `
+    Write-Host 'Server build finished successfully.'
 
-# Runtime stage - minimal Windows container
-# Suitable for Windows Server 2022 or Windows 10/11 Desktop
-FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
+# ===========================================
+# Runtime Stage
+# ===========================================
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022 AS runtime
 
 WORKDIR C:\app
 
-# Copy the built binary and config
+# Copy built binary and config
 COPY --from=builder C:\app\target\release\server.exe C:\app\server.exe
 COPY --from=builder C:\app\config.toml C:\app\config.toml
 
-# Create data directory
+# Create writable data directory
 RUN mkdir data
 
 EXPOSE 7777
