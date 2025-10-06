@@ -38,12 +38,13 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
         [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
     Invoke-WebRequest -Uri 'https://win.rustup.rs/x86_64' -OutFile 'rustup-init.exe'; `
     Start-Process -Wait -FilePath '.\rustup-init.exe' -ArgumentList `
-        '-y', '--default-toolchain', '${env:RUST_VERSION}', '--profile', 'minimal'; `
+        '-y', '--default-toolchain', $env:RUST_VERSION, '--profile', 'minimal'; `
     Remove-Item 'rustup-init.exe'; `
     $cargoBin = Join-Path $env:USERPROFILE ".cargo\bin"; `
-    $env:PATH = "$cargoBin;$env:PATH"; `
-    [Environment]::SetEnvironmentVariable('PATH', "$cargoBin;$([Environment]::GetEnvironmentVariable('PATH', 'Machine'))", 'Machine'); `
-    Write-Host 'Rust toolchain installed successfully.'
+    $newPath = "$cargoBin;$env:PATH"; `
+    setx PATH $newPath | Out-Null; `
+    $env:PATH = $newPath; `
+    Write-Host 'Rust toolchain installed successfully and PATH updated.'
 
 # ------------------------------
 # Step 3: Confirm Rust installation
