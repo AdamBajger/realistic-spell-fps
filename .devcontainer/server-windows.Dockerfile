@@ -63,9 +63,13 @@ COPY crates ./crates
 # ------------------------------
 # Step 5: Build Server Binary
 # ------------------------------
-RUN Write-Host 'Starting cargo build for server...'; `
-    cargo build --release -p server --no-default-features; `
-    Write-Host 'Server build finished successfully.'
+RUN Write-Host 'Preparing MSVC toolchain...'; `
+    $vsTools = 'C:\BuildTools'; `
+    $vcvarsPath = Join-Path $vsTools 'VC\Auxiliary\Build\vcvarsall.bat'; `
+    if (-Not (Test-Path $vcvarsPath)) { throw "VC environment script not found: $vcvarsPath" }; `
+    Write-Host "Using MSVC environment script at: $vcvarsPath"; `
+    cmd /c "`"$vcvarsPath`" x64 && set && cargo build --release -p server --no-default-features"; `
+    Write-Host 'Server build completed successfully.'
 
 # ===========================================
 # Runtime Stage
