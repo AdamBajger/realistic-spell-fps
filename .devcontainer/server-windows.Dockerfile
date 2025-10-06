@@ -63,16 +63,8 @@ COPY crates ./crates
 # ------------------------------
 # Step 5: Build Server Binary
 # ------------------------------
-RUN Write-Host 'Preparing MSVC toolchain...'; `
-    $vsTools = 'C:\BuildTools'; `
-    $vcvarsPath = Join-Path $vsTools 'VC\Auxiliary\Build\vcvarsall.bat'; `
-    if (-Not (Test-Path $vcvarsPath)) { throw "VC environment script not found: $vcvarsPath" }; `
-    Write-Host "Using MSVC environment script at: $vcvarsPath"; `
-    # Call vcvarsall to setup environment
-    & $vcvarsPath 'x64'; `
-    # Build Rust server
-    cargo build --release -p server --no-default-features; `
-    Write-Host 'Server build completed successfully.'
+COPY build-rust-msvc.bat ./
+RUN cmd /C build-rust-msvc.bat server
 
 # ===========================================
 # Runtime Stage

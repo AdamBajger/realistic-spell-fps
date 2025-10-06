@@ -63,16 +63,8 @@ COPY crates ./crates
 # ------------------------------
 # Step 5: Build Client Binary
 # ------------------------------
-RUN Write-Host 'Preparing MSVC toolchain...'; `
-    $vsTools = 'C:\BuildTools'; `
-    $vcvarsPath = Join-Path $vsTools 'VC\Auxiliary\Build\vcvarsall.bat'; `
-    if (-Not (Test-Path $vcvarsPath)) { throw "VC environment script not found: $vcvarsPath" }; `
-    Write-Host "Using MSVC environment script at: $vcvarsPath"; `
-    # Call vcvarsall to setup environment
-    & $vcvarsPath 'x64'; `
-    # Build Rust client
-    cargo build --release -p client --no-default-features; `
-    Write-Host 'Client build completed successfully.'
+COPY build-rust-msvc.bat ./ 
+RUN cmd /C build-rust-msvc.bat client
 
 # ===========================================
 # Runtime Stage
