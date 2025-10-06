@@ -61,15 +61,18 @@ COPY Cargo.lock ./
 COPY crates ./crates
 
 # ------------------------------
-# Step 5: Build Server Binary
+# Step 5: Build Client Binary
 # ------------------------------
 RUN Write-Host 'Preparing MSVC toolchain...'; `
     $vsTools = 'C:\BuildTools'; `
     $vcvarsPath = Join-Path $vsTools 'VC\Auxiliary\Build\vcvarsall.bat'; `
     if (-Not (Test-Path $vcvarsPath)) { throw "VC environment script not found: $vcvarsPath" }; `
     Write-Host "Using MSVC environment script at: $vcvarsPath"; `
-    cmd /c "`"$vcvarsPath`" x64 && set && cargo build --release -p server --no-default-features"; `
-    Write-Host 'Server build completed successfully.'
+    # Call vcvarsall to setup environment
+    & $vcvarsPath 'x64'; `
+    # Build Rust client
+    cargo build --release -p client --no-default-features; `
+    Write-Host 'Client build completed successfully.'
 
 # ===========================================
 # Runtime Stage
