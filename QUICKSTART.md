@@ -131,7 +131,7 @@ Pre-built images containing build dependencies:
 - `base-builder-linux` - Rust 1.90, pkg-config, libssl-dev
 - `base-builder-windows` - MSVC, Rust toolchain, Windows SDK
 
-Published to Docker Hub as `{username}/realistic-spell-fps/base-builder-{linux|windows}`
+Published to GitHub Container Registry as `ghcr.io/{owner}/{repo}/base-builder-{linux|windows}`
 
 ### Building Docker Images
 
@@ -146,28 +146,23 @@ docker build -f .devcontainer/base-builder-linux.Dockerfile -t base-builder-linu
 
 ## GitHub Actions Configuration
 
-### Required Secrets (for Docker Hub)
-
-Add these in Settings → Secrets and variables → Actions:
-```
-DOCKERHUB_USERNAME - Your Docker Hub username
-DOCKERHUB_TOKEN - Your Docker Hub access token (from https://hub.docker.com/settings/security)
-```
-
-### Optional Secrets (for custom registries)
-
-```
-DOCKER_REGISTRY - Custom registry URL (defaults to docker.io)
-DOCKER_USERNAME - Custom registry username  
-DOCKER_PASSWORD - Custom registry password
-```
+The project uses GitHub Container Registry (GHCR) for all Docker images. No additional secrets are required - GitHub Actions automatically provides the `GITHUB_TOKEN` with appropriate permissions.
 
 ### Workflows
 
-- **build-base-images.yml** - Builds base builder images when their Dockerfiles change
-- **docker.yml** - Builds runtime images for Linux
-- **docker-multiplatform.yml** - Builds runtime images for Linux and Windows
-- **ci.yml** - Runs tests and linting
+- **build-base-images.yml** - Builds base builder images when base Dockerfiles change
+  - Publishes to: ghcr.io/{owner}/{repo}/base-builder-{linux|windows}
+  - Tags: dev-{sha}, latest
+  
+- **ci.yml** - Runs tests and linting inside Docker containers
+  - Uses pre-built base builder images from GHCR
+  - Ensures consistent test environment
+  
+- **docker.yml** - Builds runtime images (quick single-platform)
+  - Publishes to: ghcr.io/{owner}/{repo}/{client|server}
+  
+- **docker-multiplatform.yml** - Builds runtime images (multi-platform)
+  - Publishes to: ghcr.io/{owner}/{repo}/{client|server}-{linux|windows}
 
 ## Troubleshooting
 
@@ -181,9 +176,9 @@ DOCKER_PASSWORD - Custom registry password
 ### Docker Build Issues
 
 **Base images not found:**
-- Check that `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets are configured
-- Verify base images exist on Docker Hub
-- Runtime images fall back to standard base images if custom ones are unavailable
+- Base images are automatically built and published to GHCR when base Dockerfiles change
+- First-time builds may need to wait for base images to be available
+- Check the "Build Base Images" workflow for status
 
 **Slow builds:**
 - First build is always slower (downloads dependencies)

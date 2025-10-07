@@ -1,35 +1,17 @@
 # Multi-Platform Docker Build Workflow
 #
-# Production-ready, platform-specific Docker builds
-# Runs on pushes to master/main and on version tags
+# Builds runtime images for all platforms.
+# Depends on base builder images being available.
 #
-# Use this for: Production deployments, multi-platform support
-# Use docker.yml for: Quick testing, single-platform development builds
+# Published to: GitHub Container Registry (ghcr.io)
 #
-# Platform-specific images:
-#   - client-linux: Linux AMD64 client
-#   - server-linux: Linux AMD64 server
-#   - client-windows: Windows client
-#   - server-windows: Windows server
-#
-# Uses pre-built base builder images from Docker Hub or custom registry
-# Base images are built separately via build-base-images.yml workflow
-#
-# Published to: Configurable registry (default: GitHub Container Registry)
-# Configuration: Uses DOCKER_REGISTRY, DOCKER_USERNAME, DOCKER_PASSWORD secrets
-#
-# Cargo.lock handling:
-#   - Dockerfiles use COPY Cargo.lock* pattern to handle missing lock file
-#   - If missing, cargo will generate it during docker build
-#
-name: Multi-Platform Docker Build
+name: Build Runtime Images
 
 on:
   push:
     branches: [ master, main ]
     tags:
       - 'v*'
-    # Don't trigger when only base Dockerfiles change (those are handled by build-base-images.yml)
     paths-ignore:
       - '.devcontainer/base-builder-linux.Dockerfile'
       - '.devcontainer/base-builder-windows.Dockerfile'
@@ -42,17 +24,12 @@ on:
       - '.github/workflows/build-base-images.yml'
 
 env:
-  # Allow custom registry via secrets, default to GHCR
-  REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'ghcr.io' }}
-  REGISTRY_USERNAME: ${{ secrets.DOCKER_USERNAME || github.actor }}
-  REGISTRY_PASSWORD: ${{ secrets.DOCKER_PASSWORD || secrets.GITHUB_TOKEN }}
-  # Base builder images registry (Docker Hub by default)
-  BASE_REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'docker.io' }}
-  BASE_REPO: ${{ secrets.DOCKERHUB_USERNAME || github.repository }}
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
 
 jobs:
-  build-client-linux:
-    name: Build Client (Linux)
+  build-linux:
+    name: Build Linux Images
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -64,19 +41,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      - name: Log in to Container Registry
+      - name: Log in to GitHub Container Registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ env.REGISTRY_PASSWORD }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Extract metadata
-        id: meta
+      - name: Extract metadata for client
+        id: meta-client
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/client-linux
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/client-linux
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -84,46 +61,25 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
       
-      - name: Build and push
+      - name: Build and push client
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./.devcontainer/client-linux.Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta-client.outputs.tags }}
+          labels: ${{ steps.meta-client.outputs.labels }}
+          cache-from: type=gha,scope=client-linux
+          cache-to: type=gha,mode=max,scope=client-linux
           build-args: |
-            BASE_BUILDER_IMAGE=${{ env.BASE_REGISTRY }}/${{ env.BASE_REPO }}/base-builder-linux:latest
-
-  build-server-linux:
-    name: Build Server (Linux)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+            BASE_BUILDER_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/base-builder-linux:latest
       
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Log in to Container Registry
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ env.REGISTRY_PASSWORD }}
-      
-      - name: Extract metadata
-        id: meta
+      - name: Extract metadata for server
+        id: meta-server
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/server-linux
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/server-linux
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -131,24 +87,22 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
       
-      - name: Build and push
+      - name: Build and push server
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./.devcontainer/server-linux.Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta-server.outputs.tags }}
+          labels: ${{ steps.meta-server.outputs.labels }}
+          cache-from: type=gha,scope=server-linux
+          cache-to: type=gha,mode=max,scope=server-linux
           build-args: |
-            BASE_BUILDER_IMAGE=${{ env.BASE_REGISTRY }}/${{ env.BASE_REPO }}/base-builder-linux:latest
+            BASE_BUILDER_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/base-builder-linux:latest
 
-  # Windows builds use native Docker (not BuildKit) due to compatibility issues
-  # Native Docker daemon on windows-2022 runners works reliably for Windows containers
-  build-client-windows:
-    name: Build Client (Windows)
+  build-windows:
+    name: Build Windows Images
     runs-on: windows-2022
     permissions:
       contents: read
@@ -157,66 +111,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      # Skip BuildKit setup - use native Docker daemon on Windows
-      # BuildKit doesn't support Windows containers properly on GitHub runners
-      
       - name: Prepare Docker tags
         id: prepare
         shell: bash
         run: |
-          # Convert repository name to lowercase and sanitize ref name for Docker tags
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           REF_SAFE=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/\//-/g')
           echo "repo=${REPO_LOWER}" >> $GITHUB_OUTPUT
           echo "tag=${REF_SAFE}" >> $GITHUB_OUTPUT
       
-      - name: Log in to Container Registry
+      - name: Log in to GitHub Container Registry
         if: github.event_name != 'pull_request'
         run: |
-          echo "${{ env.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u ${{ env.REGISTRY_USERNAME }} --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
       
-      - name: Build Windows client image
+      - name: Build and push Windows client
         run: |
-          docker build -f .devcontainer/client-windows.Dockerfile --build-arg BASE_BUILDER_IMAGE=${{ env.BASE_REGISTRY }}/${{ steps.prepare.outputs.repo }}/base-builder-windows:latest -t ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/client-windows:${{ steps.prepare.outputs.tag }} .
+          docker build -f .devcontainer/client-windows.Dockerfile --build-arg BASE_BUILDER_IMAGE=${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/base-builder-windows:latest -t ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/client-windows:${{ steps.prepare.outputs.tag }} .
+          if ("${{ github.event_name }}" -ne "pull_request") {
+            docker push ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/client-windows:${{ steps.prepare.outputs.tag }}
+          }
       
-      - name: Push Windows client image
-        if: github.event_name != 'pull_request'
+      - name: Build and push Windows server
         run: |
-          docker push ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/client-windows:${{ steps.prepare.outputs.tag }}
-
-  build-server-windows:
-    name: Build Server (Windows)
-    runs-on: windows-2022
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      # Skip BuildKit setup - use native Docker daemon on Windows
-      # BuildKit doesn't support Windows containers properly on GitHub runners
-      
-      - name: Prepare Docker tags
-        id: prepare
-        shell: bash
-        run: |
-          # Convert repository name to lowercase and sanitize ref name for Docker tags
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          REF_SAFE=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/\//-/g')
-          echo "repo=${REPO_LOWER}" >> $GITHUB_OUTPUT
-          echo "tag=${REF_SAFE}" >> $GITHUB_OUTPUT
-      
-      - name: Log in to Container Registry
-        if: github.event_name != 'pull_request'
-        run: |
-          echo "${{ env.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u ${{ env.REGISTRY_USERNAME }} --password-stdin
-      
-      - name: Build Windows server image
-        run: |
-          docker build -f .devcontainer/server-windows.Dockerfile --build-arg BASE_BUILDER_IMAGE=${{ env.BASE_REGISTRY }}/${{ steps.prepare.outputs.repo }}/base-builder-windows:latest -t ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/server-windows:${{ steps.prepare.outputs.tag }} .
-      
-      - name: Push Windows server image
-        if: github.event_name != 'pull_request'
-        run: |
-          docker push ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/server-windows:${{ steps.prepare.outputs.tag }}
+          docker build -f .devcontainer/server-windows.Dockerfile --build-arg BASE_BUILDER_IMAGE=${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/base-builder-windows:latest -t ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/server-windows:${{ steps.prepare.outputs.tag }} .
+          if ("${{ github.event_name }}" -ne "pull_request") {
+            docker push ${{ env.REGISTRY }}/${{ steps.prepare.outputs.repo }}/server-windows:${{ steps.prepare.outputs.tag }}
+          }

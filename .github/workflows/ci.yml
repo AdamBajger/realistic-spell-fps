@@ -1,16 +1,7 @@
-# CI/CD Workflow for URMOM (Ultimate Realms: Masters of Magic)
+# CI Workflow
 #
-# This workflow runs on every push and pull request to master/main branches.
-#
-# Jobs:
-#   - test: Runs all workspace tests with no default features
-#   - lint: Checks code formatting (rustfmt) and runs clippy for code quality
-#   - build-linux/windows/macos: Cross-platform compilation tests
-#
-# Cargo.lock handling:
-#   - If Cargo.lock exists, it will be used for reproducible builds
-#   - If missing, cargo will generate it and lock to latest compatible versions
-#   - Caching uses both Cargo.toml and Cargo.lock for better cache hit rates
+# Runs tests and linting inside Docker containers for consistency.
+# Uses pre-built base builder images from GHCR.
 #
 name: CI
 
@@ -21,69 +12,37 @@ on:
     branches: [ master, main ]
 
 env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
   CARGO_TERM_COLOR: always
-  # Allow configuration via GitHub secrets (optional)
-  SERVER_HOST: ${{ secrets.SERVER_HOST || '127.0.0.1' }}
-  SERVER_PORT: ${{ secrets.SERVER_PORT || '7777' }}
 
 jobs:
-  test:
-    name: Test
+  test-in-container:
+    name: Test (in Linux container)
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/base-builder-linux:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
-      
-      # Cargo dependency caching
-      # Note: Cargo.lock is gitignored, so cargo will generate it during first build
-      # hashFiles returns empty string if file doesn't exist, which is fine for caching
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache target directory
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Generate config from environment
-        run: |
-          cat > config.toml << EOF
-          [server]
-          host = "$SERVER_HOST"
-          port = $SERVER_PORT
-
-          [client]
-          server_host = "$SERVER_HOST"
-          server_port = $SERVER_PORT
-          EOF
+      - name: Checkout
+        uses: actions/checkout@v4
       
       - name: Run tests
         run: cargo test --workspace --verbose --no-fail-fast --no-default-features
 
-  lint:
-    name: Lint
+  lint-in-container:
+    name: Lint (in Linux container)
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/base-builder-linux:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
+      - name: Checkout
+        uses: actions/checkout@v4
       
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -92,74 +51,20 @@ jobs:
         run: cargo clippy --workspace --all-targets --no-default-features -- -D warnings
         continue-on-error: true
 
-  build-linux:
-    name: Build (Linux)
+  build-in-container:
+    name: Build (in Linux container)
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/base-builder-linux:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Checkout
+        uses: actions/checkout@v4
       
       - name: Build workspace
         run: cargo build --workspace --verbose --no-default-features
       
-      - name: Build client
-        run: cargo build -p client --verbose --no-default-features
-      
-      - name: Build server
-        run: cargo build -p server --verbose --no-default-features
-      
-      - name: Build engine
-        run: cargo build -p engine --verbose
-      
-      - name: Build editor
-        run: cargo build -p editor --verbose --no-default-features
-
-  build-windows:
-    name: Build (Windows)
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: Build workspace
-        run: cargo build --workspace --verbose --no-default-features
-      
-      - name: Build client
-        run: cargo build -p client --verbose --no-default-features
-      
-      - name: Build server
-        run: cargo build -p server --verbose --no-default-features
-      
-      - name: Build engine
-        run: cargo build -p engine --verbose
-      
-      - name: Build editor
-        run: cargo build -p editor --verbose --no-default-features
-
-  build-macos:
-    name: Build (macOS)
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: Build workspace
-        run: cargo build --workspace --verbose --no-default-features
-      
-      - name: Build client
-        run: cargo build -p client --verbose --no-default-features
-      
-      - name: Build server
-        run: cargo build -p server --verbose --no-default-features
-      
-      - name: Build engine
-        run: cargo build -p engine --verbose
-      
-      - name: Build editor
-        run: cargo build -p editor --verbose --no-default-features
+      - name: Build release
+        run: cargo build --workspace --release --verbose --no-default-features
