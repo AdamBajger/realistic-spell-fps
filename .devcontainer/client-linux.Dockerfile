@@ -1,5 +1,6 @@
 # Linux Client Dockerfile
-FROM rust:1.70-slim-bullseye as builder
+# Uses shared Linux builder for efficient multi-binary builds
+FROM rust:1.90-slim-bullseye as builder
 
 WORKDIR /app
 
@@ -10,13 +11,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace files
-COPY Cargo.toml Cargo.lock config.toml ./
+COPY Cargo.toml config.toml ./
 COPY crates ./crates
 
-# Build the client (without default features to avoid audio dependencies in container)
+# Copy Cargo.lock if it exists, otherwise cargo will generate it
+COPY Cargo.lock* ./
+
+# Build only the client binary
+# If Cargo.lock is missing, cargo will generate it and lock dependencies to latest compatible versions
 RUN cargo build --release -p client --no-default-features
 
-# Runtime stage
+# Runtime stage - minimal container with only the binary
 FROM debian:bullseye-slim
 
 # Install runtime dependencies
@@ -27,7 +32,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy the built binary and config
+# Copy the built binary and config from builder
 COPY --from=builder /app/target/release/client /app/client
 COPY --from=builder /app/config.toml /app/config.toml
 

@@ -19,6 +19,8 @@ glam = { workspace = true }
 # UI (egui for immediate mode UI)
 eframe = "0.25"
 egui = "0.25"
+# Fix for winapi winuser feature issue on Windows
+winapi = { version = "0.3", features = ["winuser"] }
 
 # File I/O
 serde = { workspace = true }

@@ -25,11 +25,26 @@ Please be respectful and constructive in all interactions.
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
 3. Make your changes
-4. Run tests: `cargo test --workspace`
-5. Run formatter: `cargo fmt --all`
-6. Run linter: `cargo clippy --workspace`
-7. Commit with clear messages
-8. Push and create a pull request
+4. Run local CI checks (see checklist below)
+5. Commit with clear messages
+6. Push and create a pull request
+
+#### Pre-Commit Checklist
+
+Before committing, ensure:
+
+- [ ] Code is formatted: `cargo fmt --all`
+- [ ] No clippy warnings: `cargo clippy --workspace`
+- [ ] All tests pass: `cargo test --workspace`
+- [ ] Build succeeds: `cargo build --workspace`
+- [ ] Documentation updated (if applicable)
+
+You can run all checks with the local CI scripts:
+```bash
+./build/ci/lint.sh    # Format and lint checks
+./build/ci/test.sh    # Run all tests
+./build/ci/build.sh   # Build all crates
+```
 
 ## Development Guidelines
 
@@ -66,3 +81,26 @@ We welcome contributions in:
 ## Questions?
 
 Open a discussion in GitHub Discussions or reach out to maintainers.
+
+## Troubleshooting
+
+### Build Failures
+
+If builds fail in CI but work locally:
+- Ensure Cargo.lock is committed (it should be tracked for workspace projects)
+- Verify platform-specific dependencies are handled correctly
+- Check for missing system libraries on CI platform
+
+### Docker Build Issues
+
+- Ensure Dockerfile paths are correct
+- Check base image compatibility
+- Verify multi-stage build layers
+- If Cargo.lock is missing, Docker builds will generate it automatically
+
+### Test Failures
+
+- Run tests locally first to reproduce
+- Check for timing issues in async tests
+- Verify test isolation (tests should not depend on execution order)
+- Use `RUST_LOG=debug cargo test` for detailed output

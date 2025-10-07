@@ -1,3 +1,22 @@
+# Docker Build Workflow
+#
+# Simple, single-platform Docker builds for quick iterations
+# Runs on pushes to master/main and on version tags
+#
+# Use this for: Quick testing, development builds
+# Use docker-multiplatform.yml for: Production multi-platform builds
+#
+# Images:
+#   - client: Built from .devcontainer/client.Dockerfile
+#   - server: Built from .devcontainer/server.Dockerfile
+#
+# Published to: GitHub Container Registry (ghcr.io)
+# Tags: branch name, PR number, semver from git tags
+#
+# Cargo.lock handling:
+#   - Dockerfiles use COPY Cargo.lock* pattern to handle missing lock file
+#   - If missing, cargo will generate it during docker build
+#
 name: Docker Build
 
 on:

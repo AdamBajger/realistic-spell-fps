@@ -1,6 +1,6 @@
-use tracing::info;
 use engine::config::Config;
 use std::path::Path;
+use tracing::info;
 
 mod game_logic;
 mod net;
@@ -16,7 +16,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Load configuration
     let config = Config::load_or_default(Path::new("config.toml"));
-    info!("Server config: {}:{}", config.server.host, config.server.port);
+    info!(
+        "Server config: {}:{}",
+        config.server.host, config.server.port
+    );
 
     // Initialize network server
     let mut server = net::NetworkServer::new(&config.server.host, config.server.port);

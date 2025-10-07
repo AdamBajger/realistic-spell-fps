@@ -14,7 +14,7 @@ pub struct ClientConfig {
     pub server_port: u16,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {
     pub server: ServerConfig,
     pub client: ClientConfig,
@@ -34,15 +34,6 @@ impl Default for ClientConfig {
         Self {
             server_host: "127.0.0.1".to_string(),
             server_port: 7777,
-        }
-    }
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            server: ServerConfig::default(),
-            client: ClientConfig::default(),
         }
     }
 }

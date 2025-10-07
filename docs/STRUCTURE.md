@@ -58,7 +58,7 @@ URMOM (Ultimate Realms: Masters of Magic)
 │   └── workspace_test.rs
 │
 ├── 🔧 build/
-│   └── ci/                  CI scripts
+│   └── ci/                  CI scripts (see script headers for usage)
 │       ├── compile_shaders.sh
 │       ├── lint.sh
 │       ├── test.sh
@@ -71,10 +71,9 @@ URMOM (Ultimate Realms: Masters of Magic)
 │   ├── ARCHITECTURE.md      System architecture
 │   ├── PHYSICS_ARCHITECTURE.md
 │   ├── AUDIO_DESIGN.md
-│   ├── CONTRIBUTING.md
+│   ├── CONTRIBUTING.md      Includes CI/CD workflow info
 │   ├── design.md            Design document
 │   ├── networking.md        Network architecture
-│   ├── CI_CD.md            CI/CD guide
 │   └── WORKSPACE.md         Workspace guide
 │
 ├── 🐳 .devcontainer/
@@ -82,7 +81,7 @@ URMOM (Ultimate Realms: Masters of Magic)
 │   ├── Dockerfile.server    Server container
 │   └── devcontainer.json    VS Code dev container
 │
-├── ⚡ .github/workflows/
+├── ⚡ .github/workflows/     CI/CD workflows (see comments in files)
 │   ├── ci.yml               Test, lint, build
 │   └── docker.yml           Docker image builds
 │

@@ -162,10 +162,10 @@ docs/
 ├── ARCHITECTURE.md          # System architecture
 ├── PHYSICS_ARCHITECTURE.md  # Physics design
 ├── AUDIO_DESIGN.md          # Audio system
-├── CONTRIBUTING.md          # Contribution guide
+├── CONTRIBUTING.md          # Contribution guide (includes CI/CD info)
 ├── design.md                # Design document
 ├── networking.md            # Network architecture
-└── CI_CD.md                 # CI/CD guide
+└── WORKSPACE.md             # Workspace guide
 ```
 
 ### Tools (`tools/`)

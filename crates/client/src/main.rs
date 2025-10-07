@@ -1,6 +1,6 @@
-use tracing::info;
 use engine::config::Config;
 use std::path::Path;
+use tracing::info;
 
 mod assets;
 mod gameplay;
@@ -23,21 +23,27 @@ async fn main() -> anyhow::Result<()> {
 
     // Load configuration
     let config = Config::load_or_default(Path::new("config.toml"));
-    info!("Client config: connecting to {}:{}", config.client.server_host, config.client.server_port);
+    info!(
+        "Client config: connecting to {}:{}",
+        config.client.server_host, config.client.server_port
+    );
 
     // Initialize network client
     let mut client = net::NetworkClient::new();
-    
+
     // Try to connect to server
-    match client.connect(&config.client.server_host, config.client.server_port).await {
+    match client
+        .connect(&config.client.server_host, config.client.server_port)
+        .await
+    {
         Ok(_) => {
             info!("Successfully connected to server");
-            
+
             // Send test message
             if let Ok(response) = client.send_message("HELLO\n").await {
                 info!("Server responded: {}", response.trim());
             }
-            
+
             client.disconnect().await?;
         }
         Err(e) => {
