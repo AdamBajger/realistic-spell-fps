@@ -63,7 +63,7 @@ COPY crates ./crates
 # ------------------------------
 # Step 5: Build Server Binary
 # ------------------------------
-COPY build-rust-msvc.bat ./
+COPY .devcontainer/build-rust-msvc.bat ./
 RUN cmd /C build-rust-msvc.bat server
 
 # ===========================================
