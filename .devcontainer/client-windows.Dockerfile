@@ -81,8 +81,6 @@ COPY crates ./crates
 # ------------------------------
 # Step 5: Build Client Binary
 # ------------------------------
-# COPY .devcontainer/build-rust-msvc.bat ./
-# RUN cmd /C build-rust-msvc.bat client
 RUN cargo build --release -p client --no-default-features
 
 # ===========================================
