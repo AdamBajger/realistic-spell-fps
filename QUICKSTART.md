@@ -146,23 +146,20 @@ docker build -f .devcontainer/base-builder-linux.Dockerfile -t base-builder-linu
 
 ## GitHub Actions Configuration
 
-The project uses GitHub Container Registry (GHCR) for all Docker images. No additional secrets are required - GitHub Actions automatically provides the `GITHUB_TOKEN` with appropriate permissions.
+The project uses GitHub Container Registry (GHCR) for Docker images. No additional secrets are required - GitHub Actions automatically provides the `GITHUB_TOKEN` with appropriate permissions.
 
 ### Workflows
 
-- **build-base-images.yml** - Builds base builder images when base Dockerfiles change
-  - Publishes to: ghcr.io/{owner}/{repo}/base-builder-{linux|windows}
-  - Tags: dev-{sha}, latest
+- **build-pipeline.yml** - Comprehensive build pipeline for all platforms
+  - Linux sequence: base-image → build-binaries → test-and-lint → runtime-check
+  - Windows sequence: base-image → build-binaries → test-and-lint → runtime-check
+  - macOS sequence: build-binaries → test-and-lint → runtime-check
+  - Base images: ghcr.io/{owner}/{repo}/base-builder-{linux|windows}
+  - Each sequence waits for previous jobs to succeed before proceeding
   
-- **ci.yml** - Runs tests and linting inside Docker containers
-  - Uses pre-built base builder images from GHCR
-  - Ensures consistent test environment
-  
-- **docker.yml** - Builds runtime images (quick single-platform)
-  - Publishes to: ghcr.io/{owner}/{repo}/{client|server}
-  
-- **docker-multiplatform.yml** - Builds runtime images (multi-platform)
-  - Publishes to: ghcr.io/{owner}/{repo}/{client|server}-{linux|windows}
+- **ci.yml** - Legacy CI workflow (runs in parallel with build-pipeline)
+  - Kept for backward compatibility
+  - Runs tests and linting on all platforms directly on runners
 
 ## Troubleshooting
 
