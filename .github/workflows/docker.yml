@@ -10,6 +10,9 @@
 #   - client: Built from .devcontainer/client.Dockerfile
 #   - server: Built from .devcontainer/server.Dockerfile
 #
+# Uses pre-built base builder images from Docker Hub or custom registry
+# Base images are built separately via build-base-images.yml workflow
+#
 # Published to: GitHub Container Registry (ghcr.io)
 # Tags: branch name, PR number, semver from git tags
 #
@@ -24,13 +27,25 @@ on:
     branches: [ master, main ]
     tags:
       - 'v*'
+    # Don't trigger when only base Dockerfiles change (those are handled by build-base-images.yml)
+    paths-ignore:
+      - '.devcontainer/base-builder-linux.Dockerfile'
+      - '.devcontainer/base-builder-windows.Dockerfile'
+      - '.github/workflows/build-base-images.yml'
   pull_request:
     branches: [ master, main ]
+    paths-ignore:
+      - '.devcontainer/base-builder-linux.Dockerfile'
+      - '.devcontainer/base-builder-windows.Dockerfile'
+      - '.github/workflows/build-base-images.yml'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME_CLIENT: ${{ github.repository }}/client
   IMAGE_NAME_SERVER: ${{ github.repository }}/server
+  # Base builder images registry (Docker Hub by default)
+  BASE_REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'docker.io' }}
+  BASE_REPO: ${{ secrets.DOCKERHUB_USERNAME || github.repository }}
 
 jobs:
   build-client:
@@ -75,6 +90,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            BASE_BUILDER_IMAGE=${{ env.BASE_REGISTRY }}/${{ env.BASE_REPO }}/base-builder-linux:latest
 
   build-server:
     name: Build Server Docker Image
@@ -118,3 +135,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            BASE_BUILDER_IMAGE=${{ env.BASE_REGISTRY }}/${{ env.BASE_REPO }}/base-builder-linux:latest
