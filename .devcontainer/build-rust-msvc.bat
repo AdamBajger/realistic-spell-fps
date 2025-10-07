@@ -1,22 +1,33 @@
-# build-rust-msvc.ps1
-param(
-    [Parameter(Mandatory=$true)]
-    [ValidateSet("client","server")]
-    [string]$Crate
+@echo off
+REM build-rust-msvc.bat client|server
+
+if "%~1"=="" (
+  echo Usage: build-rust-msvc.bat client^|server
+  exit /b 1
+)
+set "CRATE=%~1"
+
+set "VSTOOLS=C:\BuildTools"
+set "VCVARS=%VSTOOLS%\VC\Auxiliary\Build\vcvarsall.bat"
+
+if not exist "%VCVARS%" (
+  echo ERROR: vcvarsall.bat not found at "%VCVARS%"
+  exit /b 1
 )
 
-$vsTools = 'C:\BuildTools'
-$vcvarsPath = Join-Path $vsTools 'VC\Auxiliary\Build\vcvarsall.bat'
+echo Initializing MSVC environment from "%VCVARS%"
+call "%VCVARS%" x64
+if %errorlevel% neq 0 (
+  echo ERROR: vcvarsall.bat failed
+  exit /b 1
+)
 
-if (-Not (Test-Path $vcvarsPath)) {
-    throw "VC environment script not found: $vcvarsPath"
-}
+echo Building Rust crate %CRATE% (release)...
+cargo build --release -p %CRATE% --no-default-features
+if %errorlevel% neq 0 (
+  echo ERROR: cargo build failed for %CRATE%
+  exit /b 1
+)
 
-Write-Host "Initializing MSVC environment from $vcvarsPath"
-# Call vcvarsall.bat in the current session
-& $vcvarsPath 'x64'
-
-Write-Host "Building Rust crate '$Crate' in release mode..."
-cargo build --release -p $Crate --no-default-features
-
-Write-Host "Build finished for '$Crate'."
+echo Build finished successfully for %CRATE%.
+exit /b 0
