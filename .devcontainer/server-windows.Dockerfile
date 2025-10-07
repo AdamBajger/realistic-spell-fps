@@ -16,17 +16,34 @@ SHELL ["powershell", "-Command"]
 # Step 1: Install Visual Studio Build Tools (MSVC)
 # ------------------------------
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
-    Write-Host 'Installing Visual Studio Build Tools with Windows SDK...'; `
-    Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile 'vs_buildtools.exe'; `
-    Start-Process -Wait -FilePath '.\vs_buildtools.exe' -ArgumentList `
+    Write-Host 'Downloading Visual Studio Build Tools installer...'; `
+    Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile 'C:\vs_buildtools.exe'
+
+RUN Write-Host 'Installing Visual Studio Build Tools: VCTools...'; `
+    Start-Process -Wait -FilePath 'C:\vs_buildtools.exe' -ArgumentList `
         '--quiet', '--wait', '--norestart', '--nocache', `
         '--installPath', 'C:\BuildTools', `
         '--add', 'Microsoft.VisualStudio.Workload.VCTools', `
+        '--includeRecommended'; `
+    Write-Host '✅ VCTools installation complete.'
+
+RUN Write-Host 'Installing Visual Studio Build Tools: VC.Tools.x86.x64...'; `
+    Start-Process -Wait -FilePath 'C:\vs_buildtools.exe' -ArgumentList `
+        '--quiet', '--wait', '--norestart', '--nocache', `
+        '--installPath', 'C:\BuildTools', `
         '--add', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', `
+        '--includeRecommended'; `
+    Write-Host '✅ VC.Tools.x86.x64 installation complete.'
+
+RUN Write-Host 'Installing Visual Studio Build Tools: Windows 11 SDK...'; `
+    Start-Process -Wait -FilePath 'C:\vs_buildtools.exe' -ArgumentList `
+        '--quiet', '--wait', '--norestart', '--nocache', `
+        '--installPath', 'C:\BuildTools', `
         '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.26100', `
         '--includeRecommended'; `
-    Remove-Item 'vs_buildtools.exe'; `
-    Write-Host 'Visual Studio Build Tools + Windows SDK installed.'
+    Write-Host '✅ Windows 11 SDK installation complete.'
+
+RUN Remove-Item 'C:\vs_buildtools.exe' -Force
 
 # ------------------------------
 # Step 2: Install Rust Toolchain via rustup
