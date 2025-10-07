@@ -81,8 +81,9 @@ COPY crates ./crates
 # ------------------------------
 # Step 5: Build Server Binary
 # ------------------------------
-COPY .devcontainer/build-rust-msvc.bat ./
-RUN cmd /C build-rust-msvc.bat server
+# COPY .devcontainer/build-rust-msvc.bat ./
+# RUN cmd /C build-rust-msvc.bat server
+RUN cargo build --release -p server --no-default-features
 
 # ===========================================
 # Runtime Stage
