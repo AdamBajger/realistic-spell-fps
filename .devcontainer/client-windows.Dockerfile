@@ -16,16 +16,17 @@ SHELL ["powershell", "-Command"]
 # Step 1: Install Visual Studio Build Tools
 # ------------------------------
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
-    Write-Host 'Installing Visual Studio Build Tools...'; `
+    Write-Host 'Installing Visual Studio Build Tools with Windows SDK...'; `
     Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile 'vs_buildtools.exe'; `
     Start-Process -Wait -FilePath '.\vs_buildtools.exe' -ArgumentList `
         '--quiet', '--wait', '--norestart', '--nocache', `
         '--installPath', 'C:\BuildTools', `
         '--add', 'Microsoft.VisualStudio.Workload.VCTools', `
         '--add', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', `
-        '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.22000'; `
+        '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.26100', `
+        '--includeRecommended'; `
     Remove-Item 'vs_buildtools.exe'; `
-    Write-Host 'Visual Studio Build Tools installation completed.'
+    Write-Host 'Visual Studio Build Tools + Windows SDK installed.'
 
 # ------------------------------
 # Step 2: Install Rust Toolchain via rustup
