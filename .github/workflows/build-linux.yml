@@ -79,7 +79,7 @@ jobs:
       contents: read
       packages: write
     container:
-      image:  ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
+      image:  ${{ needs.build-base-image.outputs.registry }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.github_token }}
