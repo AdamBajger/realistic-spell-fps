@@ -79,10 +79,10 @@ jobs:
       contents: read
       packages: write
     container:
-      image: ghcr.io/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
+      image:  ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.github_token }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
