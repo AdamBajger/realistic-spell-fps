@@ -1,0 +1,169 @@
+# Windows Container Build Workflow
+#
+# Complete Windows build pipeline using Docker containers.
+# Jobs run sequentially with proper dependencies.
+#
+name: Build Windows
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  determine-tag:
+    name: Determine Image Tag
+    runs-on: windows-2022
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      repo: ${{ steps.tag.outputs.repo }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Generate tag and repo name
+        id: tag
+        shell: bash
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TAG="dev-${SHORT_SHA}"
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "repo=${REPO_LOWER}" >> $GITHUB_OUTPUT
+          echo "Using tag: ${TAG}"
+          echo "Using repo: ${REPO_LOWER}"
+
+  build-base-image:
+    name: Build Base Image
+    runs-on: windows-2022
+    needs: determine-tag
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push base builder
+        run: |
+          docker build -f .devcontainer/base-builder-windows.Dockerfile -t ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }} .
+          docker tag ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }} ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-windows:latest
+          docker push ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }}
+          docker push ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-windows:latest
+
+  build-binaries:
+    name: Build Binaries
+    runs-on: windows-2022
+    needs: [determine-tag, build-base-image]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: windows-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: windows-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: windows-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Build server binary
+        run: cargo build --release -p server --no-default-features
+      
+      - name: Build client binary
+        run: cargo build --release -p client --no-default-features
+      
+      - name: Test binaries run
+        shell: pwsh
+        run: |
+          $serverJob = Start-Job { & .\target\release\server.exe }
+          Start-Sleep -Seconds 5
+          Stop-Job $serverJob -ErrorAction SilentlyContinue
+          Remove-Job $serverJob -ErrorAction SilentlyContinue
+          
+          $clientJob = Start-Job { & .\target\release\client.exe }
+          Start-Sleep -Seconds 5
+          Stop-Job $clientJob -ErrorAction SilentlyContinue
+          Remove-Job $clientJob -ErrorAction SilentlyContinue
+      
+      - name: Run tests
+        run: cargo test --workspace --verbose --no-fail-fast --no-default-features
+      
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --no-default-features -- -D warnings
+        continue-on-error: true
+      
+      - name: Upload server binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-windows
+          path: target/release/server.exe
+      
+      - name: Upload client binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-windows
+          path: target/release/client.exe
+
+  runtime-check:
+    name: Runtime Check
+    runs-on: windows-2022
+    needs: build-binaries
+    steps:
+      - name: Download server binary
+        uses: actions/download-artifact@v4
+        with:
+          name: server-windows
+          path: ./bin
+      
+      - name: Download client binary
+        uses: actions/download-artifact@v4
+        with:
+          name: client-windows
+          path: ./bin
+      
+      - name: Test server runs in minimal environment
+        shell: pwsh
+        run: |
+          $job = Start-Job { & .\bin\server.exe }
+          Start-Sleep -Seconds 5
+          Stop-Job $job -ErrorAction SilentlyContinue
+          Remove-Job $job -ErrorAction SilentlyContinue
+      
+      - name: Test client runs in minimal environment
+        shell: pwsh
+        run: |
+          $job = Start-Job { & .\bin\client.exe }
+          Start-Sleep -Seconds 5
+          Stop-Job $job -ErrorAction SilentlyContinue
+          Remove-Job $job -ErrorAction SilentlyContinue

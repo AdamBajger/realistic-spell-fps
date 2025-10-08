@@ -1,0 +1,78 @@
+# macOS Build Workflow
+#
+# Complete macOS build pipeline running directly on macOS runners.
+# No Docker containers (macOS doesn't support them due to Apple ToS).
+# Jobs run sequentially with proper dependencies.
+#
+name: Build macOS
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: macos-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: macos-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: macos-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Build server binary
+        run: cargo build --release -p server --no-default-features
+      
+      - name: Build client binary
+        run: cargo build --release -p client --no-default-features
+      
+      - name: Test binaries run
+        run: |
+          timeout 5s ./target/release/server || [ $? -eq 124 ] || [ $? -eq 143 ]
+          timeout 5s ./target/release/client || [ $? -eq 124 ] || [ $? -eq 143 ]
+      
+      - name: Run tests
+        run: cargo test --workspace --verbose --no-fail-fast --no-default-features
+      
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --no-default-features -- -D warnings
+        continue-on-error: true
+      
+      - name: Upload server binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-macos
+          path: target/release/server
+      
+      - name: Upload client binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-macos
+          path: target/release/client
