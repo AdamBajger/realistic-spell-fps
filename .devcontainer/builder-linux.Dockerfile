@@ -1,15 +1,11 @@
 # Linux Builder Dockerfile
 # This builds ALL binaries for Linux in one stage to maximize build cache efficiency
 # Other Dockerfiles can copy binaries from this image
-FROM rust:1.90-slim-bullseye as builder
+# Uses base builder image for consistent build environment
+ARG BASE_BUILDER_IMAGE=rust:1.90-slim-bullseye
+FROM ${BASE_BUILDER_IMAGE} as builder
 
 WORKDIR /app
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace files
 COPY Cargo.toml ./
