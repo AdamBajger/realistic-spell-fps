@@ -71,3 +71,6 @@ RUN rustc --version; cargo --version
 
 # Set working directory for builds
 WORKDIR C:\app
+
+# Copy build script into the container
+COPY build/container/build-windows.cmd C:\build.cmd

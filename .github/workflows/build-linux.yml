@@ -1,7 +1,8 @@
 # Linux Container Build Workflow
 #
 # Complete Linux build pipeline using Docker containers.
-# Jobs run sequentially with proper dependencies.
+# All jobs run on Ubuntu runners with docker run commands.
+# Build scripts are executed inside containers with workspace mounted.
 #
 name: Build Linux
 
@@ -36,7 +37,6 @@ jobs:
           echo "repo=${REPO_LOWER}" >> $GITHUB_OUTPUT
           echo "Using tag: ${TAG}"
           echo "Using repo: ${REPO_LOWER}"
-          echo "registry=${{ env.REGISTRY }}" >> $GITHUB_OUTPUT
 
   build-base-image:
     name: Build Base Image
@@ -79,53 +79,27 @@ jobs:
     permissions:
       contents: read
       packages: write
-    container:
-      image:  ${{ needs.build-base-image.outputs.registry }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.github_token }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Cache cargo registry
-        uses: actions/cache@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          path: ~/.cargo/registry
-          key: linux-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: linux-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+      - name: Pull base builder image
+        run: docker pull ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
       
-      - name: Cache target directory
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: linux-target-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Build server binary
-        run: cargo build --release -p server --no-default-features
-      
-      - name: Build client binary
-        run: cargo build --release -p client --no-default-features
-      
-      - name: Test binaries run
+      - name: Run build in container
         run: |
-          timeout 5s ./target/release/server || [ $? -eq 124 ] || [ $? -eq 143 ]
-          timeout 5s ./target/release/client || [ $? -eq 124 ] || [ $? -eq 143 ]
-      
-      - name: Run tests
-        run: cargo test --workspace --verbose --no-fail-fast --no-default-features
-      
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-      
-      - name: Run clippy
-        run: cargo clippy --workspace --all-targets --no-default-features -- -D warnings
-        continue-on-error: true
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }} \
+            /usr/local/bin/build.sh
       
       - name: Upload server binary
         uses: actions/upload-artifact@v4

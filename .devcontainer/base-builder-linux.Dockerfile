@@ -20,3 +20,7 @@ RUN cargo search --limit 0 || true
 RUN mkdir -p /root/.cargo && \
     echo '[net]' > /root/.cargo/config.toml && \
     echo 'git-fetch-with-cli = true' >> /root/.cargo/config.toml
+
+# Copy build script into the container
+COPY build/container/build-linux.sh /usr/local/bin/build.sh
+RUN chmod +x /usr/local/bin/build.sh
