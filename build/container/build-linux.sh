@@ -11,7 +11,10 @@
 #
 set -e
 
-cd /workspace
+WORKSPACE_DIR="/workspace/"
+OUTPUT_DIR="/build/"
+
+
 
 echo "=== Container Build Script for Linux ==="
 echo "Working directory: $(pwd)"

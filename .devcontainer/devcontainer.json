@@ -3,11 +3,14 @@
   "dockerFile": "base-linux.Dockerfile",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {}
+
   },
   "customizations": {
     "vscode": {
       "extensions": [],
-      "settings": {}
+      "settings": {
+        "terminal.integrated.inheritEnv": true
+      }
     }
   },
   "forwardPorts": [7701],

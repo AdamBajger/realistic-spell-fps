@@ -22,4 +22,4 @@ RUN rustc --version && cargo --version
 RUN rustup component add rustfmt clippy
 
 
-WORKDIR /app
+WORKDIR /workspace
