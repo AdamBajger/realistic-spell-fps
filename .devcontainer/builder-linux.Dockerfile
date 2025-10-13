@@ -5,7 +5,6 @@
 ARG BASE_BUILDER_IMAGE=rust:1.90-slim-bullseye
 FROM ${BASE_BUILDER_IMAGE} as builder
 
-WORKDIR /app
 
 # Copy workspace files
 COPY Cargo.toml ./
@@ -23,3 +22,5 @@ RUN cargo build --release --workspace --no-default-features
 
 # The built binaries are now available in /app/target/release/
 # Other Dockerfiles can use this as a base or copy from it
+
+WORKDIR /app
