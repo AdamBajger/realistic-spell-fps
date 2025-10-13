@@ -225,7 +225,7 @@ The first time you open the project in a container, it will take a few minutes t
 
 ## Optional: SSH Agent Configuration
 
-To use SSH keys from your host machine inside the dev container (useful for Git operations), configure SSH agent forwarding.
+VS Code Dev Containers extension automatically forwards your SSH agent to the container. You just need to ensure SSH agent is running on your host machine and has your keys loaded.
 
 ### Linux
 
@@ -235,9 +235,12 @@ eval "$(ssh-agent -s)"
 
 # Add your SSH key
 ssh-add ~/.ssh/id_rsa  # or your key file
+
+# Verify keys are loaded
+ssh-add -l
 ```
 
-The Dev Containers extension will automatically forward your SSH agent to the container.
+The Dev Containers extension will automatically detect and forward your SSH agent.
 
 **Useful Links:**
 - GitHub SSH Documentation: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
@@ -245,47 +248,50 @@ The Dev Containers extension will automatically forward your SSH agent to the co
 
 ### Windows
 
-In WSL terminal:
+Enable and start the SSH agent service in PowerShell (as Administrator):
 
-```bash
-# Start ssh-agent if not already running
-eval "$(ssh-agent -s)"
+```powershell
+# Set ssh-agent to start automatically
+Get-Service ssh-agent | Set-Service -StartupType Automatic -PassThru | Start-Service
 
-# Add your SSH key
-ssh-add ~/.ssh/id_rsa  # or your key file
+# Verify the service is running
+Get-Service ssh-agent
 ```
 
-For persistent SSH agent in WSL, you can add a script to your `.bashrc` or `.zshrc`:
+Then add your SSH key:
 
-```bash
-# SSH Agent persistence
-SSH_ENV="$HOME/.ssh/agent-environment"
+```powershell
+# Add your SSH key (run in regular PowerShell)
+ssh-add $env:USERPROFILE\.ssh\id_rsa  # or your key file
 
-function start_agent {
-    echo "Initializing new SSH agent..."
-    /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
-    chmod 600 "${SSH_ENV}"
-    . "${SSH_ENV}" > /dev/null
-}
-
-# Source SSH settings, if applicable
-if [ -f "${SSH_ENV}" ]; then
-    . "${SSH_ENV}" > /dev/null
-    ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
-        start_agent;
-    }
-else
-    start_agent;
-fi
+# Verify keys are loaded
+ssh-add -l
 ```
+
+The Dev Containers extension will automatically forward the Windows SSH agent to the container.
 
 ---
 
 ## Optional: GPG Signing Configuration
 
-To sign Git commits with GPG inside the dev container, you need to configure GPG key forwarding.
+VS Code Dev Containers extension automatically forwards your GPG agent to the container. You just need to ensure GPG is installed and configured on your host machine.
 
-### Generate GPG Key (if you don't have one)
+### Linux
+
+**1. Install GPG (if not already installed):**
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install gnupg
+
+# Fedora
+sudo dnf install gnupg2
+
+# Arch Linux
+sudo pacman -S gnupg
+```
+
+**2. Generate GPG Key (if you don't have one):**
 
 ```bash
 # Generate a new GPG key
@@ -305,9 +311,7 @@ gpg --list-secret-keys --keyid-format LONG
 gpg --armor --export KEY_ID
 ```
 
-Add the public key to your GitHub account: https://github.com/settings/keys
-
-### Configure Git to Use GPG
+**3. Configure Git to Use GPG:**
 
 ```bash
 # Set your GPG key for Git (replace KEY_ID)
@@ -317,45 +321,69 @@ git config --global user.signingkey KEY_ID
 git config --global commit.gpgsign true
 ```
 
-### Linux GPG Forwarding
-
-Install GPG into your devcontainer, then configure GPG agent forwarding. Add to your `.devcontainer/devcontainer.json`:
-
-```json
-{
-  "mounts": [
-    "source=${localEnv:HOME}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached"
-  ]
-}
-```
-
-Or export/import your GPG key into the container manually:
+**4. Ensure GPG agent is running:**
 
 ```bash
-# On host: Export your keys
-gpg --export-secret-keys --armor KEY_ID > private-key.asc
-gpg --export --armor KEY_ID > public-key.asc
+# Start GPG agent (usually starts automatically)
+gpg-agent --daemon
 
-# In container: Import your keys
-gpg --import public-key.asc
-gpg --import private-key.asc
-
-# Trust the key
-gpg --edit-key KEY_ID
-# Type: trust
-# Select: 5 (ultimate trust)
-# Type: quit
+# Verify GPG agent is running
+gpg-connect-agent /bye
 ```
 
-### Windows GPG Forwarding
+The Dev Containers extension will automatically forward your GPG agent to the container.
 
-Install GPG in your WSL distribution:
+### Windows
 
-```bash
-sudo apt-get install gnupg
+**1. Install Gpg4win:**
+
+Download and install from https://www.gpg4win.org/
+
+**2. Set up GPG agent in PowerShell:**
+
+```powershell
+# Start GPG agent (Gpg4win includes gpg-agent)
+# The agent should start automatically with Gpg4win installation
+
+# Verify GPG is installed
+gpg --version
 ```
 
-Then follow the same steps as Linux above.
+**3. Generate GPG Key (if you don't have one):**
+
+Open PowerShell and run:
+
+```powershell
+# Generate a new GPG key
+gpg --full-generate-key
+
+# Follow the prompts (same as Linux above)
+
+# List your GPG keys
+gpg --list-secret-keys --keyid-format LONG
+
+# Export your public key (replace KEY_ID with your actual key ID)
+gpg --armor --export KEY_ID
+```
+
+**4. Configure Git to Use GPG:**
+
+```powershell
+# Set your GPG key for Git (replace KEY_ID)
+git config --global user.signingkey KEY_ID
+
+# Enable commit signing by default
+git config --global commit.gpgsign true
+
+# Tell Git where to find GPG (usually automatic with Gpg4win)
+git config --global gpg.program "C:\Program Files (x86)\GnuPG\bin\gpg.exe"
+```
+
+The Dev Containers extension will automatically forward your GPG agent to the container.
+
+### Add GPG Public Key to GitHub
+
+Add the public key to your GitHub account: https://github.com/settings/keys
 
 **Useful Links:**
 - GitHub GPG Key Generation: https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key
