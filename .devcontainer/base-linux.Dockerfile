@@ -5,6 +5,7 @@ FROM rust:1.90-slim-bullseye
 RUN apt-get update && apt-get install -y \
 pkg-config \
 libssl-dev \
+ca-certificates \
 && rm -rf /var/lib/apt/lists/*
 
 # Pre-warm cargo registry and git index caches
@@ -17,9 +18,6 @@ echo '[net]' > /root/.cargo/config.toml && \
 echo 'git-fetch-with-cli = true' >> /root/.cargo/config.toml
 
 RUN rustc --version && cargo --version
-
-# add dev features for increased code quality and checks
-RUN rustup component add rustfmt clippy
 
 
 WORKDIR /workspace

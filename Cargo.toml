@@ -8,10 +8,10 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
-edition = "2021"
+version = "0.0.3"
+edition = "2025"
 authors = ["AdamBajger"]
-license = "MIT"
+license = ""
 repository = "https://github.com/AdamBajger/realistic-spell-fps"
 
 [workspace.dependencies]

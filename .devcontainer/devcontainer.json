@@ -1,9 +1,10 @@
 {
   "name": "URMOM (Ultimate Realms: Masters of Magic) Development",
-  "dockerFile": "base-linux.Dockerfile",
+  // "dockerFile": "dev-linux.Dockerfile",
+  "image": "ghcr.io/adambajger/realistic-spell-fps-dev:0.0.3",
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
-
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "customizations": {
     "vscode": {
