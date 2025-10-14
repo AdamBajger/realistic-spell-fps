@@ -165,9 +165,7 @@ Install a Linux distribution from Microsoft Store (Ubuntu 22.04 LTS recommended)
 
 1. Download VS Code from https://code.visualstudio.com/
 2. Run the installer
-3. During installation, select:
-   - ✅ Add "Open with Code" action to Windows Explorer file context menu
-   - ✅ Add "Open with Code" action to Windows Explorer directory context menu
+3. Follow instructions and select the option:
    - ✅ Add to PATH
 
 ### 5. Install Dev Containers Extension
@@ -179,30 +177,6 @@ Open VS Code:
 
 ---
 
-## Building Dev Container Images
-
-Before opening the project in a dev container, you need to build the dev container images locally.
-
-### Linux
-
-```bash
-cd realistic-spell-fps
-./scripts/dev-setup/build-devcontainer.sh
-```
-
-### Windows
-
-Open PowerShell in the project directory:
-
-```powershell
-cd realistic-spell-fps
-.\scripts\dev-setup\build-devcontainer.ps1
-```
-
-This script will check if the dev container images are ready and build them locally if they're not already available.
-
----
-
 ## Opening the Project in Dev Container
 
 ### Clone the Repository
@@ -211,6 +185,25 @@ This script will check if the dev container images are ready and build them loca
 git clone https://github.com/AdamBajger/realistic-spell-fps.git
 cd realistic-spell-fps
 ```
+
+### Ensure Dev Container Images are available
+
+Before opening the project in a dev container, you need to pull or build the dev container images locally. To automate this process, use the provided scripts.
+
+On Linux:
+```bash
+cd realistic-spell-fps
+./scripts/dev-setup/build-devcontainer.sh
+```
+
+On Windows:
+```powershell
+cd realistic-spell-fps
+.\scripts\dev-setup\build-devcontainer.ps1
+```
+
+This script will check if the dev container images are ready and build them locally if they're not already available.
+
 
 ### Open in Dev Container
 
@@ -225,7 +218,7 @@ The first time you open the project in a container, it will take a few minutes t
 
 ## Optional: SSH Agent Configuration
 
-VS Code Dev Containers extension automatically forwards your SSH agent to the container. You just need to ensure SSH agent is running on your host machine and has your keys loaded.
+VS Code Dev Containers extension automatically forwards your SSH agent to the container using the `"terminal.integrated.inheritEnv": true` setting (afaik). You just need to ensure SSH agent is running on your host machine and has your keys loaded.
 
 ### Linux
 
@@ -240,7 +233,6 @@ ssh-add ~/.ssh/id_rsa  # or your key file
 ssh-add -l
 ```
 
-The Dev Containers extension will automatically detect and forward your SSH agent.
 
 **Useful Links:**
 - GitHub SSH Documentation: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
@@ -268,17 +260,15 @@ ssh-add $env:USERPROFILE\.ssh\id_rsa  # or your key file
 ssh-add -l
 ```
 
-The Dev Containers extension will automatically forward the Windows SSH agent to the container.
-
 ---
 
 ## Optional: GPG Signing Configuration
 
-VS Code Dev Containers extension automatically forwards your GPG agent to the container. You just need to ensure GPG is installed and configured on your host machine.
+VS Code Dev Containers extension automatically forwards your GPG agent to the container using the `"terminal.integrated.inheritEnv": true` setting (afaik). You just need to ensure GPG is installed and configured on your host machine.
 
-### Linux
+### Install and Configure GPG on Host
 
-**1. Install GPG (if not already installed):**
+#### Linux
 
 ```bash
 # Ubuntu/Debian
@@ -290,6 +280,22 @@ sudo dnf install gnupg2
 # Arch Linux
 sudo pacman -S gnupg
 ```
+
+#### Windows
+
+Download and install from https://www.gpg4win.org/
+
+Set up GPG agent in PowerShell:
+
+```powershell
+# Start GPG agent (Gpg4win includes gpg-agent)
+# The agent should start automatically with Gpg4win installation
+
+# Verify GPG is installed
+gpg --version
+```
+
+
 
 **2. Generate GPG Key (if you don't have one):**
 
@@ -311,17 +317,7 @@ gpg --list-secret-keys --keyid-format LONG
 gpg --armor --export KEY_ID
 ```
 
-**3. Configure Git to Use GPG:**
-
-```bash
-# Set your GPG key for Git (replace KEY_ID)
-git config --global user.signingkey KEY_ID
-
-# Enable commit signing by default
-git config --global commit.gpgsign true
-```
-
-**4. Ensure GPG agent is running:**
+**3. Ensure GPG agent is running:**
 
 ```bash
 # Start GPG agent (usually starts automatically)
@@ -331,23 +327,25 @@ gpg-agent --daemon
 gpg-connect-agent /bye
 ```
 
-The Dev Containers extension will automatically forward your GPG agent to the container.
+**3. Configure Git to Use GPG:**
 
-### Windows
+To setup Git to sign commits with your GPG key, and selected email, a script is provided to automate this for you on:
+ - Windows (PowerShell): `scripts/dev-setup/setup-gpg-signing-for-git.ps1`
+  - Linux (UNIX shell): `scripts/dev-setup/setup-gpg-signing-for-git.sh`
 
-**1. Install Gpg4win:**
+If you prefer to manually configure Git, you can do it as follows:
 
-Download and install from https://www.gpg4win.org/
+```bash
+# Set your GPG key for Git (replace KEY_ID)
+git config --global user.signingkey KEY_ID
 
-**2. Set up GPG agent in PowerShell:**
-
-```powershell
-# Start GPG agent (Gpg4win includes gpg-agent)
-# The agent should start automatically with Gpg4win installation
-
-# Verify GPG is installed
-gpg --version
+# Enable commit signing by default
+git config --global commit.gpgsign true
 ```
+
+
+
+
 
 **3. Generate GPG Key (if you don't have one):**
 
