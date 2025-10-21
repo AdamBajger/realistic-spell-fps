@@ -38,7 +38,7 @@ if (-not $KeyID) {
 $scope = if ($Global.IsPresent) { "--global" } else { "--local" }
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Error "Git is not installed."
+    Write-Error "Git is not installed or not in PATH."
     exit 1
 }
 
@@ -50,31 +50,51 @@ try {
     exit 1
 }
 
-# Get all emails for the key
+# --- Extract emails from GPG key ---
 try {
     $uids = gpg --list-keys --with-colons $KeyID | Select-String '^uid' | ForEach-Object { $_.ToString().Split(':')[9] }
-    $emailsInKey = $uids | ForEach-Object { ($_ -match '<(.+?)>') | Out-Null ; $matches[1] }
-    if ($emailsInKey.Count -eq 0) { throw "No emails found for key $KeyID." }
+
+    $emailsInKey = @()
+    foreach ($uid in $uids) {
+        # Extract email using regex
+        $emailMatch = [regex]::Match($uid, '<([^>]+)>')
+        if ($emailMatch.Success) {
+            $emailsInKey += $emailMatch.Groups[1].Value
+        } else {
+            Write-Output "No email found in UID: ${uid}"
+        }
+    }
+
+    if ($emailsInKey.Count -eq 0) {
+        throw "No emails found for key $KeyID."
+    }
+
+    Write-Output "$($emailsInKey.Count) emails associated with key ${KeyID}: $($emailsInKey -join ', ')"
 } catch {
-    Write-Error "Error retrieving emails for key $KeyID: $_"
+    Write-Error "Error retrieving emails for key ${KeyID}: $_"
     exit 1
 }
 
-# Determine email to use
+# --- Determine which email to use ---
+$emailToUse = $null
+
 if ($Email) {
     if ($emailsInKey -notcontains $Email) {
-        Write-Error "The specified email '$Email' is not listed in the GPG key."
+        Write-Error "The specified email '$Email' is not listed in the GPG key. Available emails: $($emailsInKey -join ', ')"
         exit 1
     }
     $emailToUse = $Email
 } else {
     if ($emailsInKey.Count -eq 1) {
         $emailToUse = $emailsInKey[0]
+        Write-Output "Using the only email listed for this key: $emailToUse"
     } else {
-        # Try to infer from git config
         try {
-            $gitEmail = git config $scope user.email
-        } catch { $gitEmail = $null }
+            $gitEmail = git config user.email
+        } catch {
+            $gitEmail = $null
+        }
+
         if ($gitEmail -and ($emailsInKey -contains $gitEmail)) {
             $emailToUse = $gitEmail
         } else {
@@ -85,6 +105,7 @@ if ($Email) {
     }
 }
 
+# --- Prepare config commands ---
 $userSigningKeyConfig = "user.signingkey ${KeyID}!"
 $userEmailConfig = "user.email ${emailToUse}"
 $commitGpgSignConfig = "commit.gpgSign true"
@@ -92,19 +113,24 @@ $gpgProgramConfig = "gpg.program ${gpgPath}"
 
 if ($DryRun) {
     Write-Output "Dry Run: The following configurations would be applied:"
-    Write-Output $userSigningKeyConfig
-    Write-Output $userEmailConfig
-    Write-Output $commitGpgSignConfig
-    Write-Output $gpgProgramConfig
+    Write-Output "  $userSigningKeyConfig"
+    Write-Output "  $userEmailConfig"
+    Write-Output "  $commitGpgSignConfig"
+    Write-Output "  $gpgProgramConfig"
     exit 0
 }
 
+# --- Apply configuration ---
 try {
     git config $scope user.signingkey "${KeyID}!"
-    git config $scope user.email $emailToUse
+    git config $scope user.email "$emailToUse"
     git config $scope commit.gpgSign true
-    git config $scope gpg.program $gpgPath
-    Write-Output "GPG signing configured with key ID ${KeyID} and email ${emailToUse} ($scope)."
+    git config $scope gpg.program "$gpgPath"
+
+    Write-Output "GPG signing configured with:"
+    Write-Output "   Key ID : ${KeyID}"
+    Write-Output "   Email  : ${emailToUse}"
+    Write-Output "   Scope  : ${scope}"
 } catch {
     Write-Error "Error configuring Git: $_"
     exit 1
