@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io/${GITHUB_REPOSITORY}
+  REGISTRY: ghcr.io
 
 jobs:
   determine-tag:
@@ -32,9 +32,9 @@ jobs:
         run: |
           VERSION=$(cargo pkgid | cut -d@ -f2)
           echo "tag=dev-${VERSION}" >> $GITHUB_OUTPUT
-          echo "repo=${REGISTRY}/realistic-spell-fps-base" >> $GITHUB_OUTPUT
+          echo "repo=${REGISTRY}/${GITHUB_REPOSITORY}" >> $GITHUB_OUTPUT
           echo "Using tag: dev-${VERSION}"
-          echo "Using repo: ${REGISTRY}/realistic-spell-fps-base"
+          echo "Using repo: ${REGISTRY}/${GITHUB_REPOSITORY}"
 
   build-base-image:
     name: Build Base Image
@@ -65,8 +65,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}:${{ needs.determine-tag.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}:latest
+            ${{ needs.determine-tag.outputs.repo }}:${{ needs.determine-tag.outputs.tag }}
+            ${{ needs.determine-tag.outputs.repo }}:latest
           cache-from: type=gha,scope=base-linux
           cache-to: type=gha,mode=max,scope=base-linux
 
@@ -89,14 +89,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Pull base builder image
-        run: docker pull ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
+        run: docker pull ${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
       
       - name: Run build in container
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            ${{ env.REGISTRY }}/${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }} \
+            ${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }} \
             /usr/local/bin/build.sh
       
       - name: Upload server binary
