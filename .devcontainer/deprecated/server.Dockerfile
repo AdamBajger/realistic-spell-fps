@@ -1,14 +1,10 @@
 # Server Dockerfile
-# Uses shared Linux builder for efficient multi-binary builds
-FROM rust:1.90-slim-bullseye as builder
+# Uses base builder image for consistent build environment
+# Base image: ghcr.io/adambajger/realistic-spell-fps/base-builder-linux or docker.io/adambajger/realistic-spell-fps-base-builder-linux
+ARG BASE_BUILDER_IMAGE=rust:1.90-slim-bullseye
+FROM ${BASE_BUILDER_IMAGE} as builder
 
 WORKDIR /app
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace files
 COPY Cargo.toml ./
