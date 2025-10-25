@@ -8,13 +8,13 @@ name: Build Windows
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ master ]
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: ghcr.io/${GITHUB_REPOSITORY}
 
 jobs:
   determine-tag:
@@ -30,13 +30,20 @@ jobs:
       - name: Generate tag and repo name
         id: tag
         run: |
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          TAG="dev-${SHORT_SHA}"
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "repo=${REPO_LOWER}" >> $GITHUB_OUTPUT
-          echo "Using tag: ${TAG}"
-          echo "Using repo: ${REPO_LOWER}"
+          # Read version from file
+          $pkgid = cargo pkgid
+          $VERSION = $pkgid.Split('@')[-1]
+          $TAG = "dev-$VERSION"
+          $REPO = "ghcr.io/adambajger/realistic-spell-fps-base"
+
+          # Write outputs for GitHub Actions
+          "$('tag')=$TAG" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "$('repo')=$REPO" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+          # Echo for logs
+          Write-Host "Using tag: $TAG"
+          Write-Host "Using repo: $REPO"
+
 
   build-base-image:
     name: Build Base Image

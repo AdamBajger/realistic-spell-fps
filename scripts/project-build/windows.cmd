@@ -10,7 +10,9 @@ REM   - Running inside base-builder-windows container
 REM   - Outputs binaries to C:\workspace\target\release\
 REM
 
-cd C:\workspace
+SET RELEASE_DIR=C:\workspace\target\release
+SET OUTPUT_DIR=C:\build
+
 
 echo === Container Build Script for Windows ===
 echo Working directory: %CD%
@@ -20,13 +22,13 @@ echo.
 
 REM Build server binary
 echo === Building server binary ===
-cargo build --release -p server --no-default-features
+cargo build --release -p server --no-default-features --target-dir %OUTPUT_DIR%
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 echo.
 
 REM Build client binary
 echo === Building client binary ===
-cargo build --release -p client --no-default-features
+cargo build --release -p client --no-default-features --target-dir %OUTPUT_DIR%
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 echo.
 
@@ -38,7 +40,7 @@ echo.
 
 REM Run tests
 echo === Running tests ===
-cargo test --workspace --verbose --no-fail-fast --no-default-features
+cargo test --workspace --verbose --no-fail-fast --no-default-features --target-dir %OUTPUT_DIR%
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 echo.
 
@@ -52,6 +54,11 @@ REM Run clippy (continue on error)
 echo === Running clippy ===
 cargo clippy --workspace --all-targets --no-default-features -- -D warnings
 echo.
+
+REM copy build artifacts to release directory
+if not exist %RELEASE_DIR% mkdir %RELEASE_DIR%
+copy %OUTPUT_DIR%\release\server.exe %RELEASE_DIR%\
+copy %OUTPUT_DIR%\release\client.exe %RELEASE_DIR%\
 
 echo === Build complete! ===
 echo Binaries available at:

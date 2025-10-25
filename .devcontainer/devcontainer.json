@@ -2,6 +2,8 @@
   "name": "URMOM (Ultimate Realms: Masters of Magic) Development",
   // "dockerFile": "dev-linux.Dockerfile",
   "image": "ghcr.io/adambajger/realistic-spell-fps-dev:0.0.3",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace/",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}

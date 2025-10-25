@@ -11,7 +11,7 @@
 #
 set -e
 
-WORKSPACE_DIR="/workspace/"
+RELEASE_DIR="/workspace/target/release"
 OUTPUT_DIR="/build/"
 
 
@@ -24,23 +24,23 @@ echo ""
 
 # Build server binary
 echo "=== Building server binary ==="
-cargo build --release -p server --no-default-features
+cargo build --release -p server --no-default-features --target-dir $OUTPUT_DIR
 echo ""
 
 # Build client binary
 echo "=== Building client binary ==="
-cargo build --release -p client --no-default-features
+cargo build --release -p client --no-default-features  --target-dir $OUTPUT_DIR
 echo ""
 
 # Verify binaries exist
 echo "=== Verifying binaries ==="
-ls -lh target/release/server
-ls -lh target/release/client
+ls -lh $RELEASE_DIR/server
+ls -lh $RELEASE_DIR/client
 echo ""
 
 # Run tests
 echo "=== Running tests ==="
-cargo test --workspace --verbose --no-fail-fast --no-default-features
+cargo test --workspace --verbose --no-fail-fast --no-default-features --target-dir $OUTPUT_DIR
 echo ""
 
 # Check formatting
@@ -53,10 +53,15 @@ echo "=== Running clippy ==="
 cargo clippy --workspace --all-targets --no-default-features -- -D warnings || echo "Clippy warnings found (non-blocking)"
 echo ""
 
+# copy build artifacts to release directory
+mkdir -p $RELEASE_DIR
+cp $OUTPUT_DIR/release/server $RELEASE_DIR/
+cp $OUTPUT_DIR/release/client $RELEASE_DIR/
+
 # Test that binaries run (timeout after 5 seconds)
 echo "=== Testing binaries run ==="
-timeout 5s ./target/release/server || [ $? -eq 124 ] || [ $? -eq 143 ]
-timeout 5s ./target/release/client || [ $? -eq 124 ] || [ $? -eq 143 ]
+timeout 5s $RELEASE_DIR/server || [ $? -eq 124 ] || [ $? -eq 143 ]
+timeout 5s $RELEASE_DIR/client || [ $? -eq 124 ] || [ $? -eq 143 ]
 echo ""
 
 echo "=== Build complete! ==="

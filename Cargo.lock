@@ -892,7 +892,7 @@ checksum = "4bfbf56724aa9eca8afa4fcfadeb479e722935bb2a0900c2d37e0cc477af0688"
 
 [[package]]
 name = "client"
-version = "0.1.0"
+version = "0.0.3"
 dependencies = [
  "anyhow",
  "ash",
@@ -1229,7 +1229,7 @@ dependencies = [
 
 [[package]]
 name = "editor"
-version = "0.1.0"
+version = "0.0.3"
 dependencies = [
  "anyhow",
  "bevy_ecs",
@@ -1346,7 +1346,7 @@ dependencies = [
 
 [[package]]
 name = "engine"
-version = "0.1.0"
+version = "0.0.3"
 dependencies = [
  "anyhow",
  "bevy_ecs",
@@ -3237,7 +3237,7 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.1.0"
+version = "0.0.3"
 dependencies = [
  "anyhow",
  "bevy_ecs",
