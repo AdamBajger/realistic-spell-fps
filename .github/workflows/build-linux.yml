@@ -31,10 +31,11 @@ jobs:
         id: tag
         run: |
           VERSION=$(cargo pkgid | cut -d@ -f2)
+          REPO_LC=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
           echo "tag=dev-${VERSION}" >> $GITHUB_OUTPUT
-          echo "repo=${REGISTRY}/${GITHUB_REPOSITORY}" >> $GITHUB_OUTPUT
+          echo "repo=${REGISTRY}/${REPO_LC}" >> $GITHUB_OUTPUT
           echo "Using tag: dev-${VERSION}"
-          echo "Using repo: ${REGISTRY}/${GITHUB_REPOSITORY}"
+          echo "Using repo: ${REGISTRY}/${REPO_LC}"
 
   build-base-image:
     name: Build Base Image

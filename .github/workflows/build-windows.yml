@@ -30,19 +30,13 @@ jobs:
       - name: Generate tag and repo name
         id: tag
         run: |
-          # Read version from file
           $pkgid = cargo pkgid
-          $VERSION = $pkgid.Split('@')[-1]
-          $TAG = "dev-$VERSION"
-          $REPO = "ghcr.io/adambajger/realistic-spell-fps-base"
-
-          # Write outputs for GitHub Actions
-          "$('tag')=$TAG" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          "$('repo')=$REPO" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
-          # Echo for logs
-          Write-Host "Using tag: $TAG"
-          Write-Host "Using repo: $REPO"
+          $version = $pkgid.Split('@')[-1]
+          $repoLower = "${{ github.repository }}".ToLower()
+          echo "tag=dev-$version" >> $env:GITHUB_OUTPUT
+          echo "repo=$env:REGISTRY/$repoLower" >> $env:GITHUB_OUTPUT
+          Write-Host "Using tag: dev-$version"
+          Write-Host "Using repo: $env:REGISTRY/$repoLower"
 
 
   build-base-image:
