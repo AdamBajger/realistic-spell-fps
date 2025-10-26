@@ -59,10 +59,10 @@ jobs:
       
       - name: Build and push base builder
         run: |
-          docker build -f .devcontainer/base-builder-windows.Dockerfile -t ${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }} .
-          docker tag ${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }} ${{ needs.determine-tag.outputs.repo }}/base-builder-windows:latest
-          docker push ${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }}
-          docker push ${{ needs.determine-tag.outputs.repo }}/base-builder-windows:latest
+          docker build -f .devcontainer/base-windows.Dockerfile -t ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }} .
+          docker tag ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }} ${{ needs.determine-tag.outputs.repo }}/base-windows:latest
+          docker push ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }}
+          docker push ${{ needs.determine-tag.outputs.repo }}/base-windows:latest
 
   build-binaries:
     name: Build Binaries
@@ -83,13 +83,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Pull base builder image
-        run: docker pull ${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }}
+        run: docker pull ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }}
       
       - name: Run build in container
         run: |
           docker run --rm `
             -v ${{ github.workspace }}:C:\workspace `
-            ${{ needs.determine-tag.outputs.repo }}/base-builder-windows:${{ needs.determine-tag.outputs.tag }} `
+            ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }} `
             C:\build.cmd
       
       - name: Upload server binary

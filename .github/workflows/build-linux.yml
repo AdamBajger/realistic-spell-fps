@@ -62,7 +62,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./.devcontainer/base-builder-linux.Dockerfile
+          file: ./.devcontainer/base-linux.Dockerfile
           platforms: linux/amd64
           push: true
           tags: |
@@ -90,14 +90,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Pull base builder image
-        run: docker pull ${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }}
+        run: docker pull ${{ needs.determine-tag.outputs.repo }}/base-linux:${{ needs.determine-tag.outputs.tag }}
       
       - name: Run build in container
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            ${{ needs.determine-tag.outputs.repo }}/base-builder-linux:${{ needs.determine-tag.outputs.tag }} \
+            ${{ needs.determine-tag.outputs.repo }}/base-linux:${{ needs.determine-tag.outputs.tag }} \
             /usr/local/bin/build.sh
       
       - name: Upload server binary
