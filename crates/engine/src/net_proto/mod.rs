@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PlayerInput {
     /// Sequence number for input ordering and reconciliation
-    pub sequence: u32,
+    pub sequence: u64d,
 
     /// Raw movement input (binary controls)
     pub move_forward: bool,

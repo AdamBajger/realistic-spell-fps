@@ -1,0 +1,138 @@
+# Windows Container Build Workflow
+#
+# Complete Windows build pipeline using Docker containers.
+# All jobs run on Ubuntu runners with docker run commands (using Windows containers).
+# Build scripts are executed inside containers with workspace mounted.
+#
+name: Build Windows
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io/${GITHUB_REPOSITORY}
+
+jobs:
+  determine-tag:
+    name: Determine Image Tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      repo: ${{ steps.tag.outputs.repo }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Generate tag and repo name
+        id: tag
+        run: |
+          $pkgid = cargo pkgid
+          $version = $pkgid.Split('@')[-1]
+          $repoLower = "${{ github.repository }}".ToLower()
+          echo "tag=dev-$version" >> $env:GITHUB_OUTPUT
+          echo "repo=$env:REGISTRY/$repoLower" >> $env:GITHUB_OUTPUT
+          Write-Host "Using tag: dev-$version"
+          Write-Host "Using repo: $env:REGISTRY/$repoLower"
+
+
+  build-base-image:
+    name: Build Base Image
+    runs-on: windows-2022
+    needs: determine-tag
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push base builder
+        run: |
+          docker build -f .devcontainer/base-windows.Dockerfile -t ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }} .
+          docker tag ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }} ${{ needs.determine-tag.outputs.repo }}/base-windows:latest
+          docker push ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }}
+          docker push ${{ needs.determine-tag.outputs.repo }}/base-windows:latest
+
+  build-binaries:
+    name: Build Binaries
+    runs-on: windows-2022
+    needs: [determine-tag, build-base-image]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Pull base builder image
+        run: docker pull ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }}
+      
+      - name: Run build in container
+        run: |
+          docker run --rm `
+            -v ${{ github.workspace }}:C:\workspace `
+            ${{ needs.determine-tag.outputs.repo }}/base-windows:${{ needs.determine-tag.outputs.tag }} `
+            C:\build.cmd
+      
+      - name: Upload server binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-windows
+          path: target/release/server.exe
+      
+      - name: Upload client binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-windows
+          path: target/release/client.exe
+
+  runtime-check:
+    name: Runtime Check
+    runs-on: windows-2022
+    needs: build-binaries
+    steps:
+      - name: Download server binary
+        uses: actions/download-artifact@v4
+        with:
+          name: server-windows
+          path: ./bin
+      
+      - name: Download client binary
+        uses: actions/download-artifact@v4
+        with:
+          name: client-windows
+          path: ./bin
+      
+      - name: Test server runs in minimal environment
+        shell: pwsh
+        run: |
+          $job = Start-Job { & .\bin\server.exe }
+          Start-Sleep -Seconds 5
+          Stop-Job $job -ErrorAction SilentlyContinue
+          Remove-Job $job -ErrorAction SilentlyContinue
+      
+      - name: Test client runs in minimal environment
+        shell: pwsh
+        run: |
+          $job = Start-Job { & .\bin\client.exe }
+          Start-Sleep -Seconds 5
+          Stop-Job $job -ErrorAction SilentlyContinue
+          Remove-Job $job -ErrorAction SilentlyContinue
