@@ -20,7 +20,9 @@ Download and install Visual Studio Code from [https://code.visualstudio.com/](ht
 
 ### Windows
 1. Run the installer.
-2. Select **Add to PATH** option.
+2. Follow instruction in the installer until you get to a point where the installer asks you to add VS Code to PATH
+3. Select **Add to PATH** option.
+4. Continue installation.
 
 ### Linux
 **Ubuntu/Debian:**
@@ -109,13 +111,6 @@ Ensure your SSH keys are available for authentication inside the container. To d
 
 You may need to restart your terminal, VS Code, or system after setting this up.
 
-### Linux
-```bash
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_rsa  # or your key file
-ssh-add -l
-```
-
 ### Windows
 ```powershell
 # Enable ssh-agent service
@@ -123,6 +118,13 @@ Get-Service ssh-agent | Set-Service -StartupType Automatic -PassThru | Start-Ser
 
 # Add your key
 ssh-add $env:USERPROFILE\.ssh\id_rsa
+ssh-add -l
+```
+
+### Linux
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa  # or your key file
 ssh-add -l
 ```
 

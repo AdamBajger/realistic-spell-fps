@@ -35,24 +35,30 @@ tracing-subscriber = "0.3"
 anyhow = "1.0"
 thiserror = "1.0"
 
-# Integration tests package
+# ───────────────────────────────────────────────────────────────
+# MAIN PACKAGE (the one you want cargo pkgid to show)
+# ───────────────────────────────────────────────────────────────
 [package]
-name = "urmom-tests"
-version = "0.1.0"
-edition = "2021"
-publish = false
+name = "urmom"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
+members = [
+    ".",
+    "crates/client",
+    "crates/server",
+    "crates/engine",
+    "crates/editor",
+]
+
+# this crate can just reexport or build the actual app binary
 [dependencies]
-client = { path = "crates/client", default-features = false }
-server = { path = "crates/server", default-features = false }
+client = { path = "crates/client" }
+server = { path = "crates/server" }
 engine = { path = "crates/engine" }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 
-[[test]]
-name = "e2e_server_client"
-path = "tests/integration/e2e_server_client.rs"
-
-[[test]]
-name = "deterministic_physics"
-path = "tests/integration/deterministic_physics.rs"

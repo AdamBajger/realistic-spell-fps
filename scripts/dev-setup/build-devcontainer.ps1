@@ -3,8 +3,8 @@ $ErrorActionPreference = "Stop"
 # $VERSION = "0.0.1"
 #load version from file
 $VERSION = Get-Content VERSION
-$BASE_IMAGE_TAG = "ghcr.io/adambajger/realistic-spell-fps-base:$VERSION"
-$DEV_IMAGE_TAG = "ghcr.io/adambajger/realistic-spell-fps-dev:$VERSION"
+$BASE_IMAGE_TAG = "ghcr.io/adambajger/realistic-spell-fps/base:$VERSION"
+$DEV_IMAGE_TAG = "ghcr.io/adambajger/realistic-spell-fps/dev:$VERSION"
 
 # check if dev image exists, if not, check if base image exists, if not build base image first, then build dev image
 # check if dev image exists, if not, check if base image exists, if not build base image first, then build dev image

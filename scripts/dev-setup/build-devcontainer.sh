@@ -2,7 +2,7 @@ set -euo pipefail
 # this script runs docker build to build the development container
 # VERSION=0.0.1
 # load version from file
-VERSION=$(cat VERSION)
+VERSION=$(cargo pkgid | cut -d@ -f2)
 BASE_IMAGE_TAG=ghcr.io/adambajger/realistic-spell-fps-base:$VERSION
 DEV_IMAGE_TAG=ghcr.io/adambajger/realistic-spell-fps-dev:$VERSION
 
